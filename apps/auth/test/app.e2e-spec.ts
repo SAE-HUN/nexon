@@ -97,4 +97,49 @@ describe('AuthController (e2e)', () => {
       .send({ email: 'notfound@example.com', password: 'password123' });
     expect(res.status).toBe(401);
   });
+
+  /**
+   * changeUserRole 엔드포인트 비즈니스 로직 테스트 (인증/인가 없음)
+   */
+  it('should change user role (business logic only)', async () => {
+    const userRes = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({ email: 'biztest1@example.com', password: 'password123' });
+    const userId = userRes.body._id || userRes.body.id;
+    const res = await request(app.getHttpServer())
+      .patch(`/auth/users/${userId}/role`)
+      .send({ role: 'OPERATOR' });
+    expect(res.status).toBe(200);
+    expect(res.body.role).toBe('OPERATOR');
+  });
+
+  it('should return error for non-existent user (business logic only)', async () => {
+    const fakeId = '60d21b4667d0d8992e610c85';
+    const res = await request(app.getHttpServer())
+      .patch(`/auth/users/${fakeId}/role`)
+      .send({ role: 'OPERATOR' });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('should return error for already same role (business logic only)', async () => {
+    const userRes = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({ email: 'biztest2@example.com', password: 'password123' });
+    const userId = userRes.body._id || userRes.body.id;
+    const res = await request(app.getHttpServer())
+      .patch(`/auth/users/${userId}/role`)
+      .send({ role: 'USER' });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('should return 400 for invalid role (business logic only)', async () => {
+    const userRes = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({ email: 'biztest3@example.com', password: 'password123' });
+    const userId = userRes.body._id || userRes.body.id;
+    const res = await request(app.getHttpServer())
+      .patch(`/auth/users/${userId}/role`)
+      .send({ role: 'NOT_A_ROLE' });
+    expect(res.status).toBe(400);
+  });
 });
