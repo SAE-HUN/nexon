@@ -4,8 +4,6 @@ import { GatewayService } from './gateway.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { RolesGuard } from './roles.guard';
-import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LoggerMiddleware } from './logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
