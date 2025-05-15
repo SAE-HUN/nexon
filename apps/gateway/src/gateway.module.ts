@@ -4,6 +4,8 @@ import { GatewayService } from './gateway.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { RolesGuard } from './roles.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -14,6 +16,13 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [GatewayController],
-  providers: [GatewayService, JwtStrategy],
+  providers: [
+    GatewayService,
+    JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class GatewayModule {}
