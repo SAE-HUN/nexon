@@ -3,6 +3,7 @@ import { GatewayService } from './gateway.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from './roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
+import { RolesGuard } from './roles.guard';
 
 @Controller()
 export class GatewayController {
@@ -12,7 +13,7 @@ export class GatewayController {
     @Inject('EVENT_SERVICE') private readonly eventClient: ClientProxy,
   ) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
   @Get()
   getHello(): string {
