@@ -1,8 +1,7 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, UseGuards, Request, Param, Patch, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Param, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 
 @Controller('auth')
