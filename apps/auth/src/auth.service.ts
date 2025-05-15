@@ -1,10 +1,12 @@
-import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument, UserRole } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ChangeUserRoleDto } from './dto/change-user-role.dto';
+
 
 @Injectable()
 export class AuthService {
@@ -55,6 +57,22 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  /**
+   * ADMIN이 타 유저의 role을 변경하는 메서드
+   */
+  async changeUserRole(userId: string, changeUserRoleDto: ChangeUserRoleDto): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+    if (user.role === changeUserRoleDto.role) {
+      throw new BadRequestException('이미 해당 role입니다.');
+    }
+    user.role = changeUserRoleDto.role;
+    await user.save();
+    return user;
   }
 
   getHello(): string {
