@@ -14,11 +14,10 @@ describe('GatewayController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
   });
-
-  it('/ (GET)', () => {
+  
+  it('/ (GET) - should return 401 when accessing without authentication', () => {
     return request(app.getHttpServer())
       .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .expect(401);
   });
 });
