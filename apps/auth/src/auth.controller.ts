@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, UseGuards, Request, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, UsePipes, ValidationPipe, UseGuards, Request, Param, Patch, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -27,11 +27,9 @@ export class AuthController {
    * User login endpoint
    */
   @Post('login')
-  @UseGuards(AuthGuard('local'))
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async login(@Body() loginDto: LoginDto, @Request() req) {
-    // req.user는 LocalStrategy의 validate에서 반환된 user 객체
-    return this.authService.signToken(req.user);
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.loginAndSignToken(loginDto);
   }
 
   /**

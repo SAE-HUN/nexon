@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +6,7 @@ import { User, UserDocument, UserRole } from './user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
+import { LoginDto } from './dto/login.dto';
 
 
 @Injectable()
@@ -39,21 +40,17 @@ export class AuthService {
   }
 
   /**
-   * 이메일과 비밀번호로 사용자 검증
+   * Validates user credentials and issues a JWT token if valid.
+   * @param loginDto - Login DTO containing email and password
+   * @returns An object containing the access token
    */
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async loginAndSignToken(loginDto: LoginDto): Promise<{ access_token: string }> {
+    const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
-    if (user && await bcrypt.compare(password, user.password)) {
-      return user;
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('Invalid email or password.');
     }
-    return null;
-  }
-
-  /**
-   * JWT 토큰 발급
-   */
-  async signToken(user: UserDocument): Promise<{ access_token: string }> {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload: { sub: string; email: string; role: string } = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
     };
