@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
 /**
- * JWT 인증을 위한 Passport 전략 클래스
+ * Passport strategy class for JWT authentication
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   /**
-   * JWT payload를 검증하고 반환
+   * Validates and returns the JWT payload
    * @param payload JWT payload
    */
   async validate(payload: any): Promise<any> {
