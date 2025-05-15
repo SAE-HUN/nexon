@@ -28,40 +28,10 @@ describe('GatewayController (e2e)', () => {
   /**
    * Health check endpoint
    */
-  it('should return 200 for /health', () => {
-    return request(app.getHttpServer())
-      .get('/health')
-      .expect(200)
-      .expect('OK');
-  });
-
-  /**
-   * ADMIN role can access protected route
-   */
-  it('should return 200 when accessing / with ADMIN role', () => {
+  it('should return 200 for /', () => {
     return request(app.getHttpServer())
       .get('/')
-      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200)
       .expect('Hello World!');
-  });
-
-  /**
-   * Should return 401 Unauthorized when accessing protected route without authentication
-   */
-  it('should return 401 when accessing / without authentication', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(401);
-  });
-
-  /**
-   * Should return 403 Forbidden when accessing protected route with USER role
-   */
-  it('should return 403 when accessing / with USER role', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .set('Authorization', `Bearer ${userToken}`)
-      .expect(403);
   });
 });

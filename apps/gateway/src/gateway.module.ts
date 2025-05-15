@@ -4,7 +4,6 @@ import { GatewayService } from './gateway.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LoggerMiddleware } from './logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -19,18 +18,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '1h' },
       }),
     }),
-    ClientsModule.register([
-      {
-        name: 'AUTH_SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 4001 },
-      },
-      {
-        name: 'EVENT_SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 4002 },
-      },
-    ]),
   ],
   controllers: [GatewayController],
   providers: [
