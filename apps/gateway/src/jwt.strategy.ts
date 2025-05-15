@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * JWT 인증을 위한 Passport 전략 클래스
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'TEMP_SECRET', // TODO: 환경변수로 분리
+      secretOrKey: configService.get<string>('JWT_SECRET', 'TEMP_SECRET'),
     });
   }
 
