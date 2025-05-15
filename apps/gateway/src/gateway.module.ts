@@ -8,13 +8,18 @@ import { RolesGuard } from './roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LoggerMiddleware } from './logger.middleware';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: 'TEMP_SECRET', // TODO: 환경변수로 분리
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET', 'TEMP_SECRET'),
+        signOptions: { expiresIn: '1h' },
+      }),
     }),
     ClientsModule.register([
       {
@@ -32,11 +37,7 @@ import { LoggerMiddleware } from './logger.middleware';
   controllers: [GatewayController],
   providers: [
     GatewayService,
-    JwtStrategy,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    JwtStrategy
   ],
 })
 export class GatewayModule implements NestModule {
