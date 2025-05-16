@@ -8,8 +8,8 @@ async function bootstrap() {
   const microservice = await NestFactory.createMicroservice<MicroserviceOptions>(AuthModule, {
     transport: Transport.TCP,
     options: {
-      host: process.env.AUTH_TCP_HOST ?? '127.0.0.1',
-      port: parseInt(process.env.AUTH_TCP_PORT ?? '4001', 10),
+      host: process.env.AUTH_HOST ?? '127.0.0.1',
+      port: parseInt(process.env.AUTH_PORT ?? '4001', 10),
     },
   });
   microservice.useGlobalPipes(new ValidationPipe({
