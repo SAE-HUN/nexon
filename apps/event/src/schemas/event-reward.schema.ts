@@ -1,18 +1,30 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Reward } from './reward.schema';
+import { EventDocument } from './event.schema';
+import { RewardDocument } from './reward.schema';
 
 export type EventRewardDocument = EventReward & Document;
 
 @Schema({ timestamps: true })
 export class EventReward {
-  @Prop({ required: true })
-  eventId: string;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: Event.name,
+    required: true,
+  })
+  event: EventDocument;
 
-  @Prop({ required: true })
-  rewardId: string;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: Reward.name,
+    required: true,
+  })
+  reward: RewardDocument; 
   
   @Prop({ required: true })
   qty: number;
 }
 
-export const EventRewardSchema = SchemaFactory.createForClass(EventReward); 
+export const EventRewardSchema = SchemaFactory.createForClass(EventReward);
+EventRewardSchema.index({ event: 1, reward: 1 }, { unique: true }); 
