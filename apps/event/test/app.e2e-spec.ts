@@ -5,12 +5,15 @@ import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservice
 import * as mongoose from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { Event } from '../src/schemas/event.schema';
+import { Reward } from '../src/schemas/reward.schema';
 import { getModelToken } from '@nestjs/mongoose';
 
 describe('Event Microservice (e2e)', () => {
   let app: INestMicroservice;
   let client: ClientProxy;
   let eventModel: any;
+  let rewardModel: any;
+  let eventRewardModel: any;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -30,10 +33,14 @@ describe('Event Microservice (e2e)', () => {
     await client.connect();
 
     eventModel = app.get(getModelToken(Event.name));
+    rewardModel = app.get(getModelToken(Reward.name));
+    eventRewardModel = app.get(getModelToken('EventReward'));
   });
 
   beforeEach(async () => {
     await eventModel.deleteMany({});
+    await rewardModel.deleteMany({});
+    await eventRewardModel.deleteMany({});
   });
 
   afterAll(async () => {
@@ -217,5 +224,149 @@ describe('Event Microservice (e2e)', () => {
     
     expect(res.data[0].title).toBe('Event 11');
     expect(res.data[9].title).toBe('Event 20');
+  });
+
+  async function createTestEventAndReward() {
+    const eventDto = {
+      title: 'Reward Test Event',
+      description: 'Event with rewards',
+      startedAt: '2024-01-01T00:00:00.000Z',
+      endedAt: '2024-01-31T23:59:59.999Z',
+      isActive: true,
+    };
+    const eventRes: any = await firstValueFrom(client.send({ cmd: 'event_create' }, eventDto));
+    const eventId = eventRes.data._id;
+
+    const rewardData = {
+      name: 'Test Reward',
+      description: 'Reward Description',
+      cmd: 'give_item',
+      type: 'item'
+    };
+    const reward = await rewardModel.create(rewardData);
+    const rewardId = reward._id.toString();
+
+    return { eventId, rewardId };
+  }
+
+  it('should link reward to event', async () => {
+    const { eventId, rewardId } = await createTestEventAndReward();
+
+    const eventRewardDto = {
+      eventId,
+      rewardId,
+      qty: 5
+    };
+    const linkRes: any = await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto));
+    expect(linkRes.success).toBe(true);
+    expect(linkRes.data.event).toBe(eventId);
+    expect(linkRes.data.reward).toBe(rewardId);
+    expect(linkRes.data.qty).toBe(5);
+  });
+
+  it('should include rewards in event detail', async () => {
+    const { eventId, rewardId } = await createTestEventAndReward();
+
+    const eventRewardDto = {
+      eventId,
+      rewardId,
+      qty: 5
+    };
+    await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto));
+
+    const detailRes: any = await firstValueFrom(client.send({ cmd: 'event_detail' }, eventId));
+    expect(detailRes.success).toBe(true);
+    expect(detailRes.data._id).toBe(eventId);
+    expect(detailRes.data.rewards).toBeDefined();
+    expect(Array.isArray(detailRes.data.rewards)).toBe(true);
+    expect(detailRes.data.rewards.length).toBe(1);
+    
+    const returnedReward = detailRes.data.rewards[0];
+    expect(returnedReward._id).toBe(rewardId);
+    expect(returnedReward.name).toBe('Test Reward');
+    expect(returnedReward.description).toBe('Reward Description');
+    expect(returnedReward.cmd).toBe('give_item');
+    expect(returnedReward.qty).toBe(5);
+  });
+
+  it('should prevent duplicate reward-event link', async () => {
+    const { eventId, rewardId } = await createTestEventAndReward();
+
+    const eventRewardDto = {
+      eventId,
+      rewardId,
+      qty: 5
+    };
+    await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto));
+
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto))
+    ).rejects.toMatchObject({ message: 'This reward is already linked to the event.' });
+  });
+
+  it('should support multiple rewards per event', async () => {
+    const { eventId, rewardId } = await createTestEventAndReward();
+
+    const eventRewardDto = {
+      eventId,
+      rewardId,
+      qty: 5
+    };
+    await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto));
+
+    const rewardData2 = {
+      name: 'Another Reward',
+      description: 'Second Reward',
+      cmd: 'give_coin',
+      type: 'item'
+    };
+    const reward2 = await rewardModel.create(rewardData2);
+    const rewardId2 = reward2._id.toString();
+
+
+    const eventRewardDto2 = {
+      eventId,
+      rewardId: rewardId2,
+      qty: 10
+    };
+    await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto2));
+
+    const finalRes: any = await firstValueFrom(client.send({ cmd: 'event_detail' }, eventId));
+    expect(finalRes.success).toBe(true);
+    expect(finalRes.data.rewards).toBeDefined();
+    expect(finalRes.data.rewards.length).toBe(2);
+
+    const hasFirstReward = finalRes.data.rewards.some(r => r._id === rewardId && r.qty === 5);
+    const hasSecondReward = finalRes.data.rewards.some(r => r._id === rewardId2 && r.qty === 10);
+    expect(hasFirstReward).toBe(true);
+    expect(hasSecondReward).toBe(true);
+  });
+
+  it('should throw error if event does not exist', async () => {
+    const reward = await rewardModel.create({ name: 'R', description: 'D', cmd: 'cmd', type: 'item' });
+    const eventRewardDto = {
+      eventId: '000000000000000000000000',
+      rewardId: reward._id.toString(),
+      qty: 1
+    };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto))
+    ).rejects.toMatchObject({ message: 'Event does not exist.' });
+  });
+
+  it('should throw error if reward does not exist', async () => {
+    const eventDto = {
+      title: 'Event', description: 'D', startedAt: '2024-01-01T00:00:00.000Z', endedAt: '2024-01-02T00:00:00.000Z', isActive: true
+    };
+    const eventRes: any = await firstValueFrom(client.send({ cmd: 'event_create' }, eventDto));
+    const eventId = eventRes.data._id;
+    const eventRewardDto = {
+      eventId,
+      rewardId: '000000000000000000000000',
+      qty: 1
+    };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto))
+    ).rejects.toMatchObject({ message: 'Reward does not exist.' });
   });
 });
