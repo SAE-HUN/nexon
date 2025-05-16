@@ -65,8 +65,8 @@ describe('Event Microservice (e2e)', () => {
       isActive: true,
     };
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDto));
-    const listEventDto = { sortBy: 'startedAt', sortOrder: 'desc' };
-    const response: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDto));
+    const listEventQuery = { sortBy: 'startedAt', sortOrder: 'desc' };
+    const response: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQuery));
     expect(response.success).toBe(true);
     expect(Array.isArray(response.data)).toBe(true);
     expect(response.data.length).toBeGreaterThan(0);
@@ -111,22 +111,22 @@ describe('Event Microservice (e2e)', () => {
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDto1));
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDto2));
 
-    const listEventDtoTrue = {
+    const listEventQueryTrue = {
       isActive: true,
       sortBy: 'startedAt',
       sortOrder: 'desc',
     };
-    const resTrue: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDtoTrue));
+    const resTrue: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQueryTrue));
     expect(resTrue.success).toBe(true);
     expect(resTrue.data.length).toBe(1);
     expect(resTrue.data[0].isActive).toBe(true);
 
-    const listEventDtoFalse = {
+    const listEventQueryFalse = {
       isActive: false,
       sortBy: 'startedAt',
       sortOrder: 'desc',
     };
-    const resFalse: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDtoFalse));
+    const resFalse: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQueryFalse));
     expect(resFalse.success).toBe(true);
     expect(resFalse.data.length).toBe(1);
     expect(resFalse.data[0].isActive).toBe(false);
@@ -150,13 +150,13 @@ describe('Event Microservice (e2e)', () => {
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDtoInRange));
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDtoOutRange));
 
-    const listEventDto = {
+    const listEventQuery = {
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-01-02T00:00:00.000Z',
       sortBy: 'startedAt',
       sortOrder: 'asc',
     };
-    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDto));
+    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQuery));
     expect(res.success).toBe(true);
     expect(res.data.length).toBe(1);
     expect(res.data[0].title).toBe('In Range');
@@ -180,11 +180,11 @@ describe('Event Microservice (e2e)', () => {
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDtoEarly));
     await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDtoLate));
 
-    const listEventDto = {
+    const listEventQuery = {
       sortBy: 'startedAt',
       sortOrder: 'asc',
     };
-    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDto));
+    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQuery));
     expect(res.success).toBe(true);
     expect(res.data.length).toBe(2);
     expect(new Date(res.data[0].startedAt).getTime()).toBeLessThan(new Date(res.data[1].startedAt).getTime());
@@ -202,13 +202,13 @@ describe('Event Microservice (e2e)', () => {
       await firstValueFrom(client.send({ cmd: 'event_create' }, createEventDto));
     }
     
-    const listEventDto = {
+    const listEventQuery = {
       page: 2,
       pageSize: 10,
       sortBy: 'startedAt',
       sortOrder: 'asc',
     };
-    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventDto));
+    const res: any = await firstValueFrom(client.send({ cmd: 'event_list' }, listEventQuery));
     expect(res.success).toBe(true);
     expect(res.page).toBe(2);
     expect(res.pageSize).toBe(10);

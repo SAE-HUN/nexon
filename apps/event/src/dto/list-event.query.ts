@@ -1,6 +1,6 @@
 import { IsOptional, IsBoolean, IsDateString, IsIn, IsInt, Min, Max } from 'class-validator';
 
-export class ListEventDto {
+export class ListEventQuery {
   @IsOptional()
   @IsDateString()
   startedAt?: string;

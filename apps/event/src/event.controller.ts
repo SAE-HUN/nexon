@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { EventService } from './event.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { CreateEventDto } from './dto/create-event.dto';
-import { ListEventDto } from './dto/list-event.dto';
+import { ListEventQuery } from './dto/list-event.query';
 
 @Controller()
 export class EventController {
@@ -19,9 +19,9 @@ export class EventController {
   }
 
   @MessagePattern({ cmd: 'event_list' })
-  async listEvents(@Payload() listEventDto: ListEventDto) {
+  async listEvents(@Payload() listEventQuery: ListEventQuery) {
     try {
-      const result = await this.eventService.findAllEvents(listEventDto);
+      const result = await this.eventService.findAllEvents(listEventQuery);
       return { success: true, ...result };
     } catch (error) {
       throw new RpcException(error.message || 'Event list fetch failed');

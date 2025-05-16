@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument } from './schemas/event.schema';
 import { CreateEventDto } from './dto/create-event.dto';
-import { ListEventDto } from './dto/list-event.dto';
+import { ListEventQuery } from './dto/list-event.query';
 
 @Injectable()
 export class EventService {
@@ -16,36 +16,36 @@ export class EventService {
     return createdEvent.save();
   }
 
-  async findAllEvents(listEventDto: ListEventDto): Promise<{
+  async findAllEvents(listEventQuery: ListEventQuery): Promise<{
     total: number;
     page: number;
     pageSize: number;
     data: Event[];
   }> {
     const query: any = {};
-    if (listEventDto.isActive !== undefined) {
-      query.isActive = listEventDto.isActive;
+    if (listEventQuery.isActive !== undefined) {
+      query.isActive = listEventQuery.isActive;
     }
-    if (listEventDto.startedAt) {
-      query.startedAt = { $gte: new Date(listEventDto.startedAt) };
+    if (listEventQuery.startedAt) {
+      query.startedAt = { $gte: new Date(listEventQuery.startedAt) };
     }
-    if (listEventDto.endedAt) {
-      query.endedAt = { $lte: new Date(listEventDto.endedAt) };
+    if (listEventQuery.endedAt) {
+      query.endedAt = { $lte: new Date(listEventQuery.endedAt) };
     }
-    const skip = (listEventDto.page - 1) * listEventDto.pageSize;
+    const skip = (listEventQuery.page - 1) * listEventQuery.pageSize;
     const [data, total] = await Promise.all([
       this.eventModel
         .find(query)
-        .sort({ [listEventDto.sortBy]: listEventDto.sortOrder === 'asc' ? 1 : -1 })
+        .sort({ [listEventQuery.sortBy]: listEventQuery.sortOrder === 'asc' ? 1 : -1 })
         .skip(skip)
-        .limit(listEventDto.pageSize)
+        .limit(listEventQuery.pageSize)
         .exec(),
       this.eventModel.countDocuments(query),
     ]);
     return {
       total,
-      page: listEventDto.page,
-      pageSize: listEventDto.pageSize,
+      page: listEventQuery.page,
+      pageSize: listEventQuery.pageSize,
       data,
     };
   }
