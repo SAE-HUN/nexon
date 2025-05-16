@@ -14,6 +14,7 @@ describe('Event Microservice (e2e)', () => {
   let eventModel: any;
   let rewardModel: any;
   let eventRewardModel: any;
+  let rewardRequestModel: any;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,12 +36,14 @@ describe('Event Microservice (e2e)', () => {
     eventModel = app.get(getModelToken(Event.name));
     rewardModel = app.get(getModelToken(Reward.name));
     eventRewardModel = app.get(getModelToken('EventReward'));
+    rewardRequestModel = app.get(getModelToken('RewardRequest'));
   });
 
   beforeEach(async () => {
     await eventModel.deleteMany({});
     await rewardModel.deleteMany({});
     await eventRewardModel.deleteMany({});
+    await rewardRequestModel.deleteMany({});
   });
 
   afterAll(async () => {
@@ -368,5 +371,81 @@ describe('Event Microservice (e2e)', () => {
     await expect(
       firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto))
     ).rejects.toMatchObject({ message: 'Reward does not exist.' });
+  });
+
+  async function createTestEventRewardAndUser() {
+    const eventDto = {
+      title: 'RewardRequest Event',
+      description: 'Event for reward request',
+      startedAt: '2024-01-01T00:00:00.000Z',
+      endedAt: '2024-01-31T23:59:59.999Z',
+      isActive: true,
+    };
+    const eventRes: any = await firstValueFrom(client.send({ cmd: 'event_create' }, eventDto));
+    const eventId = eventRes.data._id;
+
+    const rewardData = {
+      name: 'RewardRequest Reward',
+      description: 'Reward for reward request',
+      cmd: 'give_item',
+      type: 'item',
+    };
+    const reward = await rewardModel.create(rewardData);
+    const rewardId = reward._id.toString();
+
+    const eventRewardDto = { eventId, rewardId, qty: 1 };
+    const eventRewardRes: any = await firstValueFrom(client.send({ cmd: 'event_reward_create' }, eventRewardDto));
+    const eventRewardId = eventRewardRes.data._id;
+
+    const userId = '000000000000000000000001'; // 테스트용 임의 ObjectId
+    return { eventId, rewardId, eventRewardId, userId };
+  }
+
+  it('should create a reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const dto = { eventId, rewardId: eventRewardId, userId };
+    const res: any = await firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto));
+    expect(res.success).toBe(true);
+    expect(res.data.event).toBe(eventId);
+    expect(res.data.reward).toBe(eventRewardId);
+    expect(res.data.userId).toBe(userId);
+  });
+
+  it('should prevent duplicate reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const dto = { eventId, rewardId: eventRewardId, userId };
+    await firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto));
+    await expect(
+      firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto))
+    ).rejects.toMatchObject({ message: 'Duplicate reward request' });
+  });
+
+  it('should fail if event does not exist', async () => {
+    const { eventRewardId, userId } = await createTestEventRewardAndUser();
+    const dto = { eventId: '000000000000000000000000', rewardId: eventRewardId, userId };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto))
+    ).rejects.toMatchObject({ message: 'Event not found' });
+  });
+
+  it('should fail if eventReward does not exist', async () => {
+    const { eventId, userId } = await createTestEventRewardAndUser();
+    const dto = { eventId, rewardId: '000000000000000000000000', userId };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto))
+    ).rejects.toMatchObject({ message: 'EventReward not found' });
+  });
+
+  it('should list reward requests by userId', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const dto = { eventId, rewardId: eventRewardId, userId };
+    await firstValueFrom(client.send({ cmd: 'reward_request_create' }, dto));
+    const query = { userId };
+    const res: any = await firstValueFrom(client.send({ cmd: 'reward_request_list' }, query));
+    expect(res.success).toBe(true);
+    expect(Array.isArray(res.data)).toBe(true);
+    expect(res.data.length).toBe(1);
+    expect(res.data[0].userId).toBe(userId);
+    expect(res.data[0].status).toBe('PENDING');
   });
 });
