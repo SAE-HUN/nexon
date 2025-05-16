@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -7,7 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 import { LoginDto } from './dto/login.dto';
-
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +24,7 @@ export class AuthService {
     const { email, password } = createUserDto;
     const existing = await this.userModel.findOne({ email });
     if (existing) {
-      throw new ConflictException('Email already exists');
+      throw new RpcException({ message: 'Email already exists' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
@@ -35,7 +35,7 @@ export class AuthService {
       });
       return await user.save();
     } catch (err) {
-      throw new InternalServerErrorException('Failed to create user');
+      throw new RpcException('Failed to create user');
     }
   }
 
@@ -44,11 +44,11 @@ export class AuthService {
    * @param loginDto - Login DTO containing email and password
    * @returns An object containing the access token
    */
-  async loginAndSignToken(loginDto: LoginDto): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
     const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid email or password.');
+      throw new RpcException('Invalid email or password.');
     }
     const payload: { sub: string; email: string; role: string } = { sub: user.id, email: user.email, role: user.role };
     return {
@@ -59,15 +59,16 @@ export class AuthService {
   /**
    * ADMIN이 타 유저의 role을 변경하는 메서드
    */
-  async changeUserRole(userId: string, changeUserRoleDto: ChangeUserRoleDto): Promise<UserDocument> {
+  async changeUserRole(changeUserRoleDto: ChangeUserRoleDto): Promise<UserDocument> {
+    const { userId, role } = changeUserRoleDto;
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new BadRequestException('존재하지 않는 유저입니다.');
+      throw new RpcException('존재하지 않는 유저입니다.');
     }
-    if (user.role === changeUserRoleDto.role) {
-      throw new BadRequestException('이미 해당 role입니다.');
+    if (user.role === role) {
+      throw new RpcException('이미 해당 role입니다.');
     }
-    user.role = changeUserRoleDto.role;
+    user.role = role;
     await user.save();
     return user;
   }

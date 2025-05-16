@@ -1,45 +1,27 @@
-import { Controller, Get, Post, Body, UsePipes, ValidationPipe, Param, Patch } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get()
-  getHello(): string {
-    return this.authService.getHello();
+  
+  @MessagePattern({ cmd: 'auth_signup' })
+  async signUp(@Payload() createUserDto: CreateUserDto) {
+    return this.authService.createUser(createUserDto);
   }
 
-  /**
-   * User sign up endpoint
-   */
-  @Post('signup')
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async signUp(@Body() createUserDto: CreateUserDto) {
-    return await this.authService.createUser(createUserDto);
+  @MessagePattern({ cmd: 'auth_login' })
+  async login(@Payload() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
-  /**
-   * User login endpoint
-   */
-  @Post('login')
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.loginAndSignToken(loginDto);
-  }
-
-  /**
-   * ADMIN이 타 유저의 role을 변경하는 엔드포인트
-   */
-  @Patch('users/:userId/role')
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async changeUserRole(
-    @Param('userId') userId: string,
-    @Body() changeUserRoleDto: ChangeUserRoleDto
-  ) {
-    return this.authService.changeUserRole(userId, changeUserRoleDto);
+  @MessagePattern({ cmd: 'auth_change_role' })
+  async changeUserRole(@Payload() changeUserRoleDto: ChangeUserRoleDto) {
+    return this.authService.changeUserRole(changeUserRoleDto);
   }
 }
