@@ -1,12 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { EventService } from './event.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventQuery } from './dto/list-event.query';
+import { CreateEventRewardDto } from './dto/create-event-reward.dto';
 
 @Controller()
 export class EventController {
-  constructor(private readonly eventService: EventService) {}
+  constructor(
+    private readonly eventService: EventService,
+  ) {}
 
   @MessagePattern({ cmd: 'event_create' })
   async createEvent(@Payload() createEventDto: CreateEventDto) {
@@ -38,6 +41,16 @@ export class EventController {
       return { success: true, data: event };
     } catch (error) {
       throw new RpcException(error.message || 'Event detail fetch failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event_reward_create' })
+  async createEventReward(@Payload() dto: CreateEventRewardDto) {
+    try {
+      const result = await this.eventService.createEventReward(dto);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || '이벤트-보상 연결 실패');
     }
   }
 }

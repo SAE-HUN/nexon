@@ -4,11 +4,17 @@ import { Model } from 'mongoose';
 import { Event, EventDocument } from './schemas/event.schema';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventQuery } from './dto/list-event.query';
+import { Reward, RewardDocument } from './schemas/reward.schema';
+import { EventReward, EventRewardDocument } from './schemas/event-reward.schema';
+import { CreateEventRewardDto } from './dto/create-event-reward.dto';
+import { ListEventRewardQuery } from './dto/list-event-reward.query';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel(Event.name) private readonly eventModel: Model<EventDocument>,
+    @InjectModel(Reward.name) private readonly rewardModel: Model<RewardDocument>,
+    @InjectModel(EventReward.name) private readonly eventRewardModel: Model<EventRewardDocument>,
   ) {}
 
   async createEvent(createEventDto: CreateEventDto): Promise<Event> {
@@ -54,7 +60,33 @@ export class EventService {
     };
   }
 
-  async findEventById(eventId: string): Promise<Event | null> {
-    return this.eventModel.findById(eventId).exec();
+  async findEventById(eventId: string): Promise<any> {
+    const event = await this.eventModel.findById(eventId).exec();
+    if (!event) throw new Error('Event not found');
+    
+    const eventRewards = await this.eventRewardModel.find({ event: eventId }).populate(Reward.name.toLowerCase()).exec();
+    const rewardsWithQty = eventRewards.map(er => {
+      const rewardObj = (er.reward as any).toObject ? (er.reward as any).toObject() : er.reward;
+      return {
+        ...rewardObj,
+        qty: er.qty
+      };
+    });
+    return { ...event.toObject(), rewards: rewardsWithQty };
+  }
+
+  async createEventReward(createEventRewardDto: CreateEventRewardDto): Promise<EventReward> {
+    const { eventId, rewardId, qty } = createEventRewardDto;
+    const exists = await this.eventRewardModel.findOne({ event: eventId, reward: rewardId });
+    if (exists) throw new Error('This reward is already linked to the event.');
+
+    const event = await this.eventModel.findById(eventId);
+    if (!event) throw new Error('Event does not exist.');
+
+    const reward = await this.rewardModel.findById(rewardId);
+    if (!reward) throw new Error('Reward does not exist.');
+
+    const eventReward = new this.eventRewardModel({ event: eventId, reward: rewardId, qty });
+    return eventReward.save();
   }
 }
