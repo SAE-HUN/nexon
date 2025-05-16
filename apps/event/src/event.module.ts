@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Event, EventSchema } from './schemas/event.schema';
 import { Reward, RewardSchema } from './schemas/reward.schema';
 import { EventReward, EventRewardSchema } from './schemas/event-reward.schema';
+import { RewardRequest, RewardRequestSchema } from './schemas/reward-request.schema';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EventReward, EventRewardSchema } from './schemas/event-reward.schema';
       { name: Event.name, schema: EventSchema },
       { name: Reward.name, schema: RewardSchema },
       { name: EventReward.name, schema: EventRewardSchema },
+      { name: RewardRequest.name, schema: RewardRequestSchema },
     ]),
   ],
   controllers: [EventController],

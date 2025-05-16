@@ -8,6 +8,10 @@ import { Reward, RewardDocument } from './schemas/reward.schema';
 import { EventReward, EventRewardDocument } from './schemas/event-reward.schema';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
 import { ListEventRewardQuery } from './dto/list-event-reward.query';
+import { RewardRequest, RewardRequestDocument, RewardRequestStatus } from './schemas/reward-request.schema';
+import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
+import { RpcException } from '@nestjs/microservices';
+import { ListRewardRequestQuery } from './dto/list-reward-request.query';
 
 @Injectable()
 export class EventService {
@@ -15,6 +19,7 @@ export class EventService {
     @InjectModel(Event.name) private readonly eventModel: Model<EventDocument>,
     @InjectModel(Reward.name) private readonly rewardModel: Model<RewardDocument>,
     @InjectModel(EventReward.name) private readonly eventRewardModel: Model<EventRewardDocument>,
+    @InjectModel(RewardRequest.name) private readonly rewardRequestModel: Model<RewardRequestDocument>,
   ) {}
 
   async createEvent(createEventDto: CreateEventDto): Promise<Event> {
@@ -88,5 +93,49 @@ export class EventService {
 
     const eventReward = new this.eventRewardModel({ event: eventId, reward: rewardId, qty });
     return eventReward.save();
+  }
+
+  /**
+   * Create a new reward request for a user
+   */
+  async createRewardRequest(createRewardRequestDto: CreateRewardRequestDto): Promise<RewardRequest> {
+    const { eventId, rewardId, userId } = createRewardRequestDto;
+    // 1. Check event exists
+    const event = await this.eventModel.findById(eventId);
+    if (!event) throw new RpcException('Event not found');
+
+    // 2. Check event-reward exists
+    const eventReward = await this.eventRewardModel.findById(rewardId);
+    if (!eventReward) throw new RpcException('EventReward not found');
+
+    // 3. Check duplicate request
+    const exists = await this.rewardRequestModel.findOne({ event: eventId, reward: rewardId, userId });
+    if (exists) throw new RpcException('Duplicate reward request');
+
+    // 4. Create reward request
+    const rewardRequest = new this.rewardRequestModel({
+      event: eventId,
+      reward: rewardId,
+      userId,
+      status: RewardRequestStatus.PENDING,
+      reason: null,
+    });
+    return rewardRequest.save();
+  }
+
+  /**
+   * List reward requests by query
+   */
+  async listRewardRequests(query: ListRewardRequestQuery): Promise<RewardRequest[]> {
+    const findQuery: any = {};
+    if (query.userId) findQuery.userId = query.userId;
+    if (query.eventId) findQuery.event = query.eventId;
+    if (query.rewardId) findQuery.reward = query.rewardId;
+    if (query.status) findQuery.status = query.status;
+    return this.rewardRequestModel
+      .find(findQuery)
+      .populate('event')
+      .populate('reward')
+      .exec();
   }
 }

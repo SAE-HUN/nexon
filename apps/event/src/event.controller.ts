@@ -4,6 +4,8 @@ import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventQuery } from './dto/list-event.query';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
+import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
+import { ListRewardRequestQuery } from './dto/list-reward-request.query';
 
 @Controller()
 export class EventController {
@@ -51,6 +53,26 @@ export class EventController {
       return { success: true, data: result };
     } catch (error) {
       throw new RpcException(error.message || '이벤트-보상 연결 실패');
+    }
+  }
+
+  @MessagePattern({ cmd: 'reward_request_create' })
+  async createRewardRequest(@Payload() dto: CreateRewardRequestDto) {
+    try {
+      const result = await this.eventService.createRewardRequest(dto);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'reward_request_list' })
+  async listRewardRequests(@Payload() query: ListRewardRequestQuery) {
+    try {
+      const result = await this.eventService.listRewardRequests(query);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request list failed');
     }
   }
 }
