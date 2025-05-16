@@ -1,13 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestMicroservice, ValidationPipe } from '@nestjs/common';
+import { INestMicroservice } from '@nestjs/common';
 import { AuthModule } from './../src/auth.module';
 import { getModelToken } from '@nestjs/mongoose';
 import { User } from '../src/user.schema';
 import mongoose from 'mongoose';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { NestFactory } from '@nestjs/core';
-import { RpcException } from '@nestjs/microservices';
 
 describe('Auth (microservice e2e)', () => {
   let app: INestMicroservice;
@@ -15,27 +13,19 @@ describe('Auth (microservice e2e)', () => {
   let userModel: any;
 
   beforeAll(async () => {
-    app = await NestFactory.createMicroservice(AuthModule, {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AuthModule],
+    }).compile();
+
+    app = moduleFixture.createNestMicroservice({
       transport: Transport.TCP,
-      options: {
-        host: '127.0.0.1',
-        port: 4000,
-      },
-      logger: false
+      options: { host: '127.0.0.1', port: 4000 },
     });
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) => new RpcException(errors),
-    }));
     await app.listen();
 
     client = ClientProxyFactory.create({
       transport: Transport.TCP,
-      options: {
-        host: '127.0.0.1',
-        port: 4000,
-      },
+      options: { host: '127.0.0.1', port: 4000 },
     });
     await client.connect();
     userModel = app.get(getModelToken(User.name));
