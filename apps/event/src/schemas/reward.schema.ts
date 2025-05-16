@@ -5,6 +5,9 @@ export type RewardDocument = Reward & Document;
 
 @Schema({ timestamps: true })
 export class Reward {
+  @Prop({ required: true})
+  type: string;
+
   @Prop({ required: true })
   name: string;
 
@@ -16,3 +19,4 @@ export class Reward {
 }
 
 export const RewardSchema = SchemaFactory.createForClass(Reward); 
+RewardSchema.index({ type: 1, name: 1 }, { unique: true }); 
