@@ -32,20 +32,24 @@ export class EventService {
     if (listEventQuery.endedAt) {
       query.endedAt = { $lte: new Date(listEventQuery.endedAt) };
     }
-    const skip = (listEventQuery.page - 1) * listEventQuery.pageSize;
+    const page = listEventQuery.page && listEventQuery.page > 0 ? listEventQuery.page : 1;
+    const pageSize = listEventQuery.pageSize && listEventQuery.pageSize > 0 && listEventQuery.pageSize <= 100 ? listEventQuery.pageSize : 20;
+    const sortBy = listEventQuery.sortBy || 'startedAt';
+    const sortOrder = listEventQuery.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
     const [data, total] = await Promise.all([
       this.eventModel
         .find(query)
-        .sort({ [listEventQuery.sortBy]: listEventQuery.sortOrder === 'asc' ? 1 : -1 })
+        .sort({ [sortBy]: sortOrder })
         .skip(skip)
-        .limit(listEventQuery.pageSize)
+        .limit(pageSize)
         .exec(),
       this.eventModel.countDocuments(query),
     ]);
     return {
       total,
-      page: listEventQuery.page,
-      pageSize: listEventQuery.pageSize,
+      page,
+      pageSize,
       data,
     };
   }
