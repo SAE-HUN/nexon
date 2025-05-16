@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { LoggerMiddleware } from './logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -18,6 +19,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '1h' },
       }),
     }),
+    ClientsModule.register([
+      {
+        name: 'AUTH_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.AUTH_TCP_HOST ?? '127.0.0.1',
+          port: parseInt(process.env.AUTH_TCP_PORT ?? '4001', 10),
+        },
+      },
+    ]),
   ],
   controllers: [GatewayController],
   providers: [

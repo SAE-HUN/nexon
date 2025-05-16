@@ -9,7 +9,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: process.env.AUTH_TCP_HOST ?? '127.0.0.1',
-      port: parseInt(process.env.AUTH_TCP_PORT ?? '4002', 10),
+      port: parseInt(process.env.AUTH_TCP_PORT ?? '4001', 10),
     },
   });
   microservice.useGlobalPipes(new ValidationPipe({
