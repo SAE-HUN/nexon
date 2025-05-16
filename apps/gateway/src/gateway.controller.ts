@@ -11,6 +11,9 @@ import { ListRewardRequestQuery } from '../../event/src/dto/list-reward-request.
 import { LoginDto } from '../../auth/src/dto/login.dto';
 import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
 import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiBearerAuth()
 @Controller()
 export class GatewayController {
   constructor(
