@@ -10,17 +10,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   
-  @MessagePattern({ cmd: 'auth_signup' })
+  @MessagePattern({ cmd: 'auth.user.signup' })
   async signUp(@Payload() createUserDto: CreateUserDto) {
     return this.authService.createUser(createUserDto);
   }
 
-  @MessagePattern({ cmd: 'auth_login' })
+  @MessagePattern({ cmd: 'auth.user.login' })
   async login(@Payload() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
-  @MessagePattern({ cmd: 'auth_change_role' })
+  @MessagePattern({ cmd: 'auth.user.change-role' })
   async changeUserRole(@Payload() changeUserRoleDto: ChangeUserRoleDto) {
     return this.authService.changeUserRole(changeUserRoleDto);
   }

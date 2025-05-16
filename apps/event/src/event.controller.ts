@@ -13,7 +13,7 @@ export class EventController {
     private readonly eventService: EventService,
   ) {}
 
-  @MessagePattern({ cmd: 'event_create' })
+  @MessagePattern({ cmd: 'event.event.create' })
   async createEvent(@Payload() createEventDto: CreateEventDto) {
     try {
       const event = await this.eventService.createEvent(createEventDto);
@@ -23,7 +23,7 @@ export class EventController {
     }
   }
 
-  @MessagePattern({ cmd: 'event_list' })
+  @MessagePattern({ cmd: 'event.event.list' })
   async listEvents(@Payload() listEventQuery: ListEventQuery) {
     try {
       const result = await this.eventService.findAllEvents(listEventQuery);
@@ -33,7 +33,7 @@ export class EventController {
     }
   }
 
-  @MessagePattern({ cmd: 'event_detail' })
+  @MessagePattern({ cmd: 'event.event.get' })
   async getEventDetail(@Payload() eventId: string) {
     try {
       const event = await this.eventService.findEventById(eventId);
@@ -46,7 +46,7 @@ export class EventController {
     }
   }
 
-  @MessagePattern({ cmd: 'event_reward_create' })
+  @MessagePattern({ cmd: 'event.event-reward.create' })
   async createEventReward(@Payload() dto: CreateEventRewardDto) {
     try {
       const result = await this.eventService.createEventReward(dto);
@@ -56,7 +56,7 @@ export class EventController {
     }
   }
 
-  @MessagePattern({ cmd: 'reward_request_create' })
+  @MessagePattern({ cmd: 'event.reward-request.create' })
   async createRewardRequest(@Payload() dto: CreateRewardRequestDto) {
     try {
       const result = await this.eventService.createRewardRequest(dto);
@@ -66,7 +66,7 @@ export class EventController {
     }
   }
 
-  @MessagePattern({ cmd: 'reward_request_list' })
+  @MessagePattern({ cmd: 'event.reward-request.list' })
   async listRewardRequests(@Payload() query: ListRewardRequestQuery) {
     try {
       const result = await this.eventService.listRewardRequests(query);

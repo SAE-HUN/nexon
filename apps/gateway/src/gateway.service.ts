@@ -6,13 +6,18 @@ import { firstValueFrom } from 'rxjs';
 export class GatewayService {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    @Inject('EVENT_SERVICE') private readonly eventClient: ClientProxy,
   ) {}
 
   getHello(): string {
     return 'Hello World!';
   }
   
-  async proxy(cmd: string, data?: any): Promise<any> {
+  async proxyToAuth(cmd: string, data?: any): Promise<any> {
     return await firstValueFrom(this.authClient.send({ cmd }, data));
+  }
+
+  async proxyToEvent(cmd: string, data?: any): Promise<any> {
+    return await firstValueFrom(this.eventClient.send({ cmd }, data));
   }
 }
