@@ -31,7 +31,7 @@ export class EventService {
     return createdEvent.save();
   }
 
-  async findAllEvents(listEventQuery: ListEventQuery): Promise<{
+  async listEvents(listEventQuery: ListEventQuery): Promise<{
     total: number;
     page: number;
     pageSize: number;
@@ -69,7 +69,7 @@ export class EventService {
     };
   }
 
-  async findEventById(eventId: string): Promise<any> {
+  async getEventDetail(eventId: string): Promise<any> {
     const event = await this.eventModel.findById(eventId).exec();
     if (!event) throw new Error('Event not found');
     
@@ -138,8 +138,8 @@ export class EventService {
     if (query.status) findQuery.status = query.status;
     return this.rewardRequestModel
       .find(findQuery)
-      .populate('event')
-      .populate('reward')
+      .populate(Event.name.toLowerCase())
+      .populate(Reward.name.toLowerCase())
       .exec();
   }
 
@@ -223,50 +223,40 @@ export class EventService {
    * @returns Updated RewardRequest document
    */
   async approveRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
-    const session = await this.rewardRequestModel.db.startSession();
-    session.startTransaction();
-    try {
-      const updated = await this.rewardRequestModel.findOneAndUpdate(
-        { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
-        { status: RewardRequestStatus.APPROVED },
-        { new: true, session }
-      )
-        .populate(Event.name.toLowerCase())
-        .populate(Reward.name.toLowerCase());
-      if (!updated) {
-        const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
-        if (!exists) {
-          throw new RpcException('RewardRequest not found');
-        }
-        throw new RpcException('Only PENDING requests can be approved');
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
+      { status: RewardRequestStatus.APPROVED },
+      { new: true }
+    )
+      .populate(Event.name.toLowerCase())
+      .populate(Reward.name.toLowerCase());
+    if (!updated) {
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
       }
-      
-      const eventReward = updated.reward;
-      const reward = eventReward.reward;
-      const type = reward.type;
-      const name = reward.name;
-      const qty = eventReward.qty;
-      // await firstValueFrom(this.gameClient.send(reward.cmd, {
-      //   userId: updated.userId,
-      //   eventId: updated.event._id,
-      //   rewardId: reward._id,
-      //   type,
-      //   name,
-      //   qty,
-      //   processing: { cmd: 'event.reward-request.process', payload: {
-      //     rewardRequestId: updated._id,
-      //   } },
-      //   callback: { cmd: 'event.reward-request.result', payload: {
-      //     rewardRequestId: updated._id,
-      //   } },
-      // }));
-      await session.commitTransaction();
-      return updated;
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      session.endSession();
+      throw new RpcException('Only PENDING requests can be approved');
     }
+    
+    const eventReward = updated.reward;
+    const reward = eventReward.reward;
+    const type = reward.type;
+    const name = reward.name;
+    const qty = eventReward.qty;
+    // await firstValueFrom(this.gameClient.send(reward.cmd, {
+    //   userId: updated.userId,
+    //   eventId: updated.event._id,
+    //   rewardId: reward._id,
+    //   type,
+    //   name,
+    //   qty,
+    //   processing: { cmd: 'event.reward-request.process', payload: {
+    //     rewardRequestId: updated._id,
+    //   } },
+    //   callback: { cmd: 'event.reward-request.result', payload: {
+    //     rewardRequestId: updated._id,
+    //   } },
+    // }));
+    return updated;
   }
 }

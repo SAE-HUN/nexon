@@ -28,7 +28,7 @@ export class EventController {
   @MessagePattern({ cmd: 'event.event.list' })
   async listEvents(@Payload() listEventQuery: ListEventQuery) {
     try {
-      const result = await this.eventService.findAllEvents(listEventQuery);
+      const result = await this.eventService.listEvents(listEventQuery);
       return { success: true, ...result };
     } catch (error) {
       throw new RpcException(error.message || 'Event list fetch failed');
@@ -38,10 +38,7 @@ export class EventController {
   @MessagePattern({ cmd: 'event.event.get' })
   async getEventDetail(@Payload() eventId: string) {
     try {
-      const event = await this.eventService.findEventById(eventId);
-      if (!event) {
-        throw new RpcException('Event not found');
-      }
+      const event = await this.eventService.getEventDetail(eventId);
       return { success: true, data: event };
     } catch (error) {
       throw new RpcException(error.message || 'Event detail fetch failed');
