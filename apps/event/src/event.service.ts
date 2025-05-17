@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument } from './schemas/event.schema';
@@ -7,11 +7,14 @@ import { ListEventQuery } from './dto/list-event.query';
 import { Reward, RewardDocument } from './schemas/reward.schema';
 import { EventReward, EventRewardDocument } from './schemas/event-reward.schema';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
-import { ListEventRewardQuery } from './dto/list-event-reward.query';
 import { RewardRequest, RewardRequestDocument, RewardRequestStatus } from './schemas/reward-request.schema';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
 import { RpcException } from '@nestjs/microservices';
 import { ListRewardRequestQuery } from './dto/list-reward-request.query';
+import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
+import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class EventService {
@@ -20,6 +23,7 @@ export class EventService {
     @InjectModel(Reward.name) private readonly rewardModel: Model<RewardDocument>,
     @InjectModel(EventReward.name) private readonly eventRewardModel: Model<EventRewardDocument>,
     @InjectModel(RewardRequest.name) private readonly rewardRequestModel: Model<RewardRequestDocument>,
+    @Inject('GAME_SERVICE') private readonly gameClient: ClientProxy,
   ) {}
 
   async createEvent(createEventDto: CreateEventDto): Promise<Event> {
@@ -137,5 +141,132 @@ export class EventService {
       .populate('event')
       .populate('reward')
       .exec();
+  }
+
+  /**
+   * Rejects a pending reward request atomically using findOneAndUpdate.
+   * @param dto RejectRewardRequestDto
+   * @returns Updated RewardRequest document
+   */
+  async rejectRewardRequest(dto: RejectRewardRequestDto): Promise<RewardRequest> {
+    const { rewardRequestId, reason } = dto;
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
+      { status: RewardRequestStatus.REJECTED, reason },
+      { new: true }
+    );
+    if (!updated) {
+      // Check if the request exists at all for better error message
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only PENDING requests can be rejected');
+    }
+    return updated;
+  }
+
+  /**
+   * @param rewardRequestId string
+   * @returns Updated RewardRequest document
+   */
+  async processRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.APPROVED },
+      { status: RewardRequestStatus.PROCESSING },
+      { new: true }
+    );
+    if (!updated) {
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only APPROVED requests can be processed');
+    }
+    return updated;
+  }
+
+  /**
+   * Handles the result of a reward request (success/failure) from external system.
+   * Only updates if current status is PROCESSING (idempotent).
+   * @param dto ResultRewardRequestDto
+   * @returns Updated RewardRequest document
+   */
+  async handleRewardRequestResult(dto: ResultRewardRequestDto): Promise<RewardRequest> {
+    const { rewardRequestId, status, reason } = dto;
+    let update: Partial<RewardRequest> = {};
+    if (status === 'SUCCESS') {
+      update = { status: RewardRequestStatus.SUCCESS, reason: null };
+    } else if (status === 'FAILED') {
+      update = { status: RewardRequestStatus.FAILED, reason: reason || 'Unknown failure' };
+    } else {
+      throw new RpcException('Invalid status');
+    }
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.PROCESSING },
+      update,
+      { new: true }
+    );
+    if (!updated) {
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only PROCESSING requests can be updated');
+    }
+    return updated;
+  }
+
+  /**
+   * Approves a pending reward request atomically using findOneAndUpdate.
+   * @param rewardRequestId string
+   * @returns Updated RewardRequest document
+   */
+  async approveRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
+    const session = await this.rewardRequestModel.db.startSession();
+    session.startTransaction();
+    try {
+      const updated = await this.rewardRequestModel.findOneAndUpdate(
+        { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
+        { status: RewardRequestStatus.APPROVED },
+        { new: true, session }
+      )
+        .populate(Event.name.toLowerCase())
+        .populate(Reward.name.toLowerCase());
+      if (!updated) {
+        const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+        if (!exists) {
+          throw new RpcException('RewardRequest not found');
+        }
+        throw new RpcException('Only PENDING requests can be approved');
+      }
+      
+      const eventReward = updated.reward;
+      const reward = eventReward.reward;
+      const type = reward.type;
+      const name = reward.name;
+      const qty = eventReward.qty;
+      // await firstValueFrom(this.gameClient.send(reward.cmd, {
+      //   userId: updated.userId,
+      //   eventId: updated.event._id,
+      //   rewardId: reward._id,
+      //   type,
+      //   name,
+      //   qty,
+      //   processing: { cmd: 'event.reward-request.process', payload: {
+      //     rewardRequestId: updated._id,
+      //   } },
+      //   callback: { cmd: 'event.reward-request.result', payload: {
+      //     rewardRequestId: updated._id,
+      //   } },
+      // }));
+      await session.commitTransaction();
+      return updated;
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      session.endSession();
+    }
   }
 }

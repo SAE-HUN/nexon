@@ -7,6 +7,7 @@ import { Event, EventSchema } from './schemas/event.schema';
 import { Reward, RewardSchema } from './schemas/reward.schema';
 import { EventReward, EventRewardSchema } from './schemas/event-reward.schema';
 import { RewardRequest, RewardRequestSchema } from './schemas/reward-request.schema';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -23,6 +24,16 @@ import { RewardRequest, RewardRequestSchema } from './schemas/reward-request.sch
       { name: Reward.name, schema: RewardSchema },
       { name: EventReward.name, schema: EventRewardSchema },
       { name: RewardRequest.name, schema: RewardRequestSchema },
+    ]),
+    ClientsModule.register([
+      {
+        name: 'GAME_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: process.env.GAME_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.GAME_SERVICE_PORT || '4003', 10),
+        },
+      },
     ]),
   ],
   controllers: [EventController],

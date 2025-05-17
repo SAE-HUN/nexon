@@ -6,6 +6,8 @@ import { ListEventQuery } from './dto/list-event.query';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
 import { ListRewardRequestQuery } from './dto/list-reward-request.query';
+import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
+import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 
 @Controller()
 export class EventController {
@@ -73,6 +75,46 @@ export class EventController {
       return { success: true, data: result };
     } catch (error) {
       throw new RpcException(error.message || 'Reward request list failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward-request.reject' })
+  async rejectRewardRequest(@Payload() dto: RejectRewardRequestDto) {
+    try {
+      const result = await this.eventService.rejectRewardRequest(dto);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request reject failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward-request.process' })
+  async processRewardRequest(@Payload() rewardRequestId: string) {
+    try {
+      const result = await this.eventService.processRewardRequest(rewardRequestId);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request process failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward-request.result' })
+  async handleRewardRequestResult(@Payload() dto: ResultRewardRequestDto) {
+    try {
+      const result = await this.eventService.handleRewardRequestResult(dto);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request result handling failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward-request.approve' })
+  async approveRewardRequest(@Payload() rewardRequestId: string) {
+    try {
+      const result = await this.eventService.approveRewardRequest(rewardRequestId);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request approve failed');
     }
   }
 }
