@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
-import { EventController } from './event.controller';
-import { EventService } from './event.service';
+import { EventController } from './event/event.controller';
+import { EventService } from './event/event.service';
+import { RewardController } from './reward/reward.controller';
+import { RewardService } from './reward/reward.service';
+import { EventRewardController } from './event-reward/event-reward.controller';
+import { EventRewardService } from './event-reward/event-reward.service';
+import { RewardRequestController } from './reward-request/reward-request.controller';
+import { RewardRequestService } from './reward-request/reward-request.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Event, EventSchema } from './schemas/event.schema';
-import { Reward, RewardSchema } from './schemas/reward.schema';
-import { EventReward, EventRewardSchema } from './schemas/event-reward.schema';
-import { RewardRequest, RewardRequestSchema } from './schemas/reward-request.schema';
+import { Event, EventSchema } from './event/schema/event.schema';
+import { Reward, RewardSchema } from './reward/schema/reward.schema';
+import { EventReward, EventRewardSchema } from './event-reward/schema/event-reward.schema';
+import { RewardRequest, RewardRequestSchema } from './reward-request/schema/reward-request.schema';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
@@ -36,7 +42,17 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
     ]),
   ],
-  controllers: [EventController],
-  providers: [EventService],
+  controllers: [
+    EventController,
+    RewardController,
+    EventRewardController,
+    RewardRequestController,
+  ],
+  providers: [
+    EventService,
+    RewardService,
+    EventRewardService,
+    RewardRequestService,
+  ],
 })
 export class EventModule {}
