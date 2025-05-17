@@ -617,4 +617,70 @@ describe('Event Microservice (e2e)', () => {
       firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId))
     ).rejects.toMatchObject({ message: 'Only PENDING requests can be approved' });
   });
+  
+  it('should list rewards with pagination and filter', async () => {
+    // Create rewards
+    const rewards = Array.from({ length: 15 }).map((_, i) => ({
+      name: `Reward ${i + 1}`,
+      description: `Desc ${i + 1}`,
+      cmd: 'give_item',
+      type: i % 2 === 0 ? 'item' : 'point',
+    }));
+    for (const reward of rewards) {
+      await rewardModel.create(reward);
+    }
+    
+    const resAll: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, {}));
+    expect(resAll.success).toBe(true);
+    expect(resAll.total).toBe(15);
+    expect(resAll.data.length).toBe(15);
+    
+    const resPage: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { page: 2, pageSize: 5 }));
+    expect(resPage.success).toBe(true);
+    expect(resPage.page).toBe(2);
+    expect(resPage.pageSize).toBe(5);
+    expect(resPage.data.length).toBe(5);
+    
+    const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { type: 'item' }));
+    expect(resFilter.success).toBe(true);
+    expect(resFilter.data.every((r: any) => r.type === 'item')).toBe(true);
+
+    const resSort: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { sortOrder: 'asc' }));
+    expect(resSort.success).toBe(true);
+    expect(resSort.data[0].name).toBe('Reward 1');
+  });
+
+  it('should list event-rewards with pagination and filter', async () => {
+    const event = await eventModel.create({
+      title: 'Event for EventReward',
+      description: 'desc',
+      startedAt: '2024-01-01T00:00:00.000Z',
+      endedAt: '2024-01-31T23:59:59.999Z',
+      isActive: true,
+    });
+
+    const rewards = await Promise.all(Array.from({ length: 8 }).map((_, i) => rewardModel.create({
+      name: `ER${i + 1}`,
+      description: 'desc',
+      cmd: 'give',
+      type: 'item',
+    })));
+    for (let i = 0; i < rewards.length; i++) {
+      await eventRewardModel.create({ event: event._id, reward: rewards[i]._id, qty: i + 1 });
+    }
+    const resAll: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, {}));
+    expect(resAll.success).toBe(true);
+    expect(resAll.total).toBe(8);
+    expect(resAll.data.length).toBe(8);
+
+    const resPage: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { page: 2, pageSize: 3 }));
+    expect(resPage.success).toBe(true);
+    expect(resPage.page).toBe(2);
+    expect(resPage.pageSize).toBe(3);
+    expect(resPage.data.length).toBe(3);
+
+    const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { eventId: event._id.toString() }));
+    expect(resFilter.success).toBe(true);
+    expect(resFilter.data.every((er: any) => er.event.toString() === event._id.toString() || er.event._id?.toString() === event._id.toString())).toBe(true);
+  });
 });
