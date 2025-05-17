@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument, UserRole } from './schema/user.schema';
+import { User, UserDocument } from './schema/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 import { LoginDto } from './dto/login.dto';
 import { RpcException } from '@nestjs/microservices';
-
+import { UserRole } from './enum/user-role.enum';
 @Injectable()
 export class AuthService {
   constructor(
