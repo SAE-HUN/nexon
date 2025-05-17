@@ -13,6 +13,8 @@ import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
 import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { RejectRewardRequestDto } from '../../event/src/dto/reject-reward-request.dto';
+import { ListRewardQuery } from '../../event/src/dto/list-reward.query';
+import { ListEventRewardQuery } from '../../event/src/dto/list-event-reward.query';
 
 @ApiBearerAuth()
 @Controller()
@@ -96,5 +98,17 @@ export class GatewayController {
   @Roles('ADMIN', 'OPERATOR', 'AUDITOR')
   async approveRewardRequest(@Body('rewardRequestId') rewardRequestId: string) {
     return this.gatewayService.proxyToEvent('event.reward-request.approve', rewardRequestId);
+  }
+
+  @Get('reward')
+  @UseGuards(AuthGuard('jwt'))
+  async listRewards(@Query() query: ListRewardQuery) {
+    return this.gatewayService.proxyToEvent('event.reward.list', query);
+  }
+
+  @Get('event-reward')
+  @UseGuards(AuthGuard('jwt'))
+  async listEventRewards(@Query() query: ListEventRewardQuery) {
+    return this.gatewayService.proxyToEvent('event.event-reward.list', query);
   }
 }
