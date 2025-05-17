@@ -1,3 +1,5 @@
+jest.setTimeout(30000);
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice } from '@nestjs/common';
 import { EventModule } from './../src/event.module';
@@ -7,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { Event } from '../src/schemas/event.schema';
 import { Reward } from '../src/schemas/reward.schema';
 import { getModelToken } from '@nestjs/mongoose';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
 describe('Event Microservice (e2e)', () => {
   let app: INestMicroservice;
@@ -15,8 +18,13 @@ describe('Event Microservice (e2e)', () => {
   let rewardModel: any;
   let eventRewardModel: any;
   let rewardRequestModel: any;
+  let replSet: MongoMemoryReplSet;
 
   beforeAll(async () => {
+    replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+    const uri = replSet.getUri();
+    process.env.EVENT_MONGODB_URI = uri;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [EventModule],
     }).compile();
@@ -50,6 +58,9 @@ describe('Event Microservice (e2e)', () => {
     await client.close();
     await app.close();
     await mongoose.disconnect();
+    if (replSet) {
+      await replSet.stop();
+    }
   });
 
   it('should create an event (event.event.create)', async () => {
@@ -447,5 +458,165 @@ describe('Event Microservice (e2e)', () => {
     expect(res.data.length).toBe(1);
     expect(res.data[0].userId).toBe(userId);
     expect(res.data[0].status).toBe('PENDING');
+  });
+
+  it('should reject a pending reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+
+    const rejectDto = { rewardRequestId, reason: '조건 미달' };
+    const rejectRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto));
+    expect(rejectRes.success).toBe(true);
+    expect(rejectRes.data.status).toBe('REJECTED');
+    expect(rejectRes.data.reason).toBe('조건 미달');
+  });
+
+  it('should not reject a non-pending reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'REJECTED' });
+    const rejectDto = { rewardRequestId, reason: '이미 거절됨' };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto))
+    ).rejects.toMatchObject({ message: 'Only PENDING requests can be rejected' });
+    const updated = await rewardRequestModel.findById(rewardRequestId);
+    expect(updated.status).toBe('REJECTED');
+  });
+
+  it('should fail to reject non-existent reward request', async () => {
+    const rejectDto = { rewardRequestId: '000000000000000000000000', reason: '존재하지 않음' };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto))
+    ).rejects.toMatchObject({ message: 'RewardRequest not found' });
+  });
+
+  it('should process an APPROVED reward request to PROCESSING', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'APPROVED' });
+
+    const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+    expect(processRes.success).toBe(true);
+    expect(processRes.data.status).toBe('PROCESSING');
+  });
+
+  it('should throw error if process is called on non-APPROVED reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId))
+    ).rejects.toMatchObject({ message: 'Only APPROVED requests can be processed' });
+  });
+
+  it('should throw error if reward request does not exist when processing', async () => {
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, '000000000000000000000000'))
+    ).rejects.toMatchObject({ message: 'RewardRequest not found' });
+  });
+
+  it('should update reward request to SUCCESS via result message (PROCESSING only)', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'APPROVED' });
+    const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+    expect(processRes.success).toBe(true);
+    expect(processRes.data.status).toBe('PROCESSING');
+    const resultDto = { rewardRequestId, status: 'SUCCESS' };
+    const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
+    expect(resultRes.success).toBe(true);
+    expect(resultRes.data.status).toBe('SUCCESS');
+    const updated = await rewardRequestModel.findById(rewardRequestId);
+    expect(updated.status).toBe('SUCCESS');
+  });
+
+  it('should update reward request to FAILED via result message (PROCESSING only)', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'APPROVED' });
+    await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+    const resultDto = { rewardRequestId, status: 'FAILED', reason: '지급 실패' };
+    const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
+    expect(resultRes.success).toBe(true);
+    expect(resultRes.data.status).toBe('FAILED');
+    expect(resultRes.data.reason).toBe('지급 실패');
+    const updated = await rewardRequestModel.findById(rewardRequestId);
+    expect(updated.status).toBe('FAILED');
+    expect(updated.reason).toBe('지급 실패');
+  });
+
+  it('should throw error if result is called on non-PROCESSING reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    // 상태를 PENDING으로 둔 채 result 호출
+    const resultDto = { rewardRequestId, status: 'SUCCESS' };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
+    ).rejects.toMatchObject({ message: 'Only PROCESSING requests can be updated' });
+  });
+
+  it('should throw error if reward request does not exist when result is called', async () => {
+    const resultDto = { rewardRequestId: '000000000000000000000000', status: 'SUCCESS' };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
+    ).rejects.toMatchObject({ message: 'RewardRequest not found' });
+  });
+
+  it('should throw error for invalid status in result message', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'APPROVED' });
+    await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+    const resultDto = { rewardRequestId, status: 'INVALID' };
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
+    ).rejects.toMatchObject({ message: 'Invalid status' });
+  });
+
+  it('should approve a pending reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    const approveRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
+    expect(approveRes.success).toBe(true);
+    expect(approveRes.data.status).toBe('APPROVED');
+    const updated = await rewardRequestModel.findById(rewardRequestId);
+    expect(updated.status).toBe('APPROVED');
+  });
+
+  it('should throw error if reward request does not exist when approving', async () => {
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, '000000000000000000000000'))
+    ).rejects.toMatchObject({ message: 'RewardRequest not found' });
+  });
+
+  it('should throw error if approving a non-pending reward request', async () => {
+    const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+    const createDto = { eventId, rewardId: eventRewardId, userId };
+    const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+    const rewardRequestId = createRes.data._id;
+    await rewardRequestModel.findByIdAndUpdate(rewardRequestId, { status: 'APPROVED' });
+    await expect(
+      firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId))
+    ).rejects.toMatchObject({ message: 'Only PENDING requests can be approved' });
   });
 });
