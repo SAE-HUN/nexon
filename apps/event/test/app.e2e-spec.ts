@@ -5,8 +5,8 @@ import { INestMicroservice } from '@nestjs/common';
 import { EventModule } from './../src/event.module';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { Event } from '../src/schemas/event.schema';
-import { Reward } from '../src/schemas/reward.schema';
+import { Event } from '../src/event/schema/event.schema';
+import { Reward } from '../src/reward/schema/reward.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 

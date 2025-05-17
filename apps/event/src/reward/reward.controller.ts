@@ -1,0 +1,19 @@
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { RewardService } from './reward.service';
+import { ListRewardQuery } from './dto/list-reward.query';
+
+@Controller()
+export class RewardController {
+  constructor(private readonly rewardService: RewardService) {}
+
+  @MessagePattern({ cmd: 'event.reward.list' })
+  async listRewards(@Payload() query: ListRewardQuery) {
+    try {
+      const result = await this.rewardService.listRewards(query);
+      return { success: true, ...result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward list fetch failed');
+    }
+  }
+} 
