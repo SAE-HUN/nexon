@@ -4,7 +4,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice } from '@nestjs/common';
 import { EventModule } from './../src/event.module';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
-import * as mongoose from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { Event } from '../src/schemas/event.schema';
 import { Reward } from '../src/schemas/reward.schema';
@@ -57,7 +56,6 @@ describe('Event Microservice (e2e)', () => {
   afterAll(async () => {
     await client.close();
     await app.close();
-    await mongoose.disconnect();
     if (replSet) {
       await replSet.stop();
     }
