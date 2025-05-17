@@ -33,35 +33,34 @@ export class EventService {
     return createdEvent.save();
   }
 
-  async listEvents(listEventQuery: ListEventQuery): Promise<{
+  async listEvents(query: ListEventQuery): Promise<{
     total: number;
     page: number;
     pageSize: number;
     data: Event[];
   }> {
-    const query: any = {};
-    if (listEventQuery.isActive !== undefined) {
-      query.isActive = listEventQuery.isActive;
+    const { isActive, startedAt, endedAt, page, pageSize, sortBy } = query;
+    const findQuery: any = {};
+    if (isActive !== undefined) {
+      findQuery.isActive = isActive;
     }
-    if (listEventQuery.startedAt) {
-      query.startedAt = { $gte: new Date(listEventQuery.startedAt) };
+    if (startedAt) {
+      findQuery.startedAt = { $gte: new Date(startedAt) };
     }
-    if (listEventQuery.endedAt) {
-      query.endedAt = { $lte: new Date(listEventQuery.endedAt) };
+    if (endedAt) {
+      findQuery.endedAt = { $lte: new Date(endedAt) };
     }
-    const page = listEventQuery.page && listEventQuery.page > 0 ? listEventQuery.page : 1;
-    const pageSize = listEventQuery.pageSize && listEventQuery.pageSize > 0 && listEventQuery.pageSize <= 100 ? listEventQuery.pageSize : 20;
-    const sortBy = listEventQuery.sortBy || 'startedAt';
-    const sortOrder = listEventQuery.sortOrder === 'asc' ? 1 : -1;
+
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;
     const [data, total] = await Promise.all([
       this.eventModel
-        .find(query)
+        .find(findQuery)
         .sort({ [sortBy]: sortOrder })
         .skip(skip)
         .limit(pageSize)
         .exec(),
-      this.eventModel.countDocuments(query),
+      this.eventModel.countDocuments(findQuery),
     ]);
     return {
       total,
@@ -86,8 +85,8 @@ export class EventService {
     return { ...event.toObject(), rewards: rewardsWithQty };
   }
 
-  async createEventReward(createEventRewardDto: CreateEventRewardDto): Promise<EventReward> {
-    const { eventId, rewardId, qty } = createEventRewardDto;
+  async createEventReward(dto: CreateEventRewardDto): Promise<EventReward> {
+    const { eventId, rewardId, qty } = dto;
     const exists = await this.eventRewardModel.findOne({ event: eventId, reward: rewardId });
     if (exists) throw new Error('This reward is already linked to the event.');
 
@@ -104,8 +103,8 @@ export class EventService {
   /**
    * Create a new reward request for a user
    */
-  async createRewardRequest(createRewardRequestDto: CreateRewardRequestDto): Promise<RewardRequest> {
-    const { eventId, rewardId, userId } = createRewardRequestDto;
+  async createRewardRequest(dto: CreateRewardRequestDto): Promise<RewardRequest> {
+    const { eventId, rewardId, userId } = dto;
     // 1. Check event exists
     const event = await this.eventModel.findById(eventId);
     if (!event) throw new RpcException('Event not found');
@@ -138,13 +137,13 @@ export class EventService {
     pageSize: number;
     data: RewardRequest[];
   }> {
+    const { userId, eventId, rewardId, status, page, pageSize } = query;
     const findQuery: any = {};
-    if (query.userId) findQuery.userId = query.userId;
-    if (query.eventId) findQuery.event = query.eventId;
-    if (query.rewardId) findQuery.reward = query.rewardId;
-    if (query.status) findQuery.status = query.status;
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    if (userId) findQuery.userId = userId;
+    if (eventId) findQuery.event = eventId;
+    if (rewardId) findQuery.reward = rewardId;
+    if (status) findQuery.status = status;
+    
     const sortBy = 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;
@@ -290,11 +289,11 @@ export class EventService {
     pageSize: number;
     data: EventReward[];
   }> {
+    const { eventId, rewardId, page, pageSize } = query;
     const findQuery: any = {};
-    if (query.eventId) findQuery.event = query.eventId;
-    if (query.rewardId) findQuery.reward = query.rewardId;
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    if (eventId) findQuery.event = eventId;
+    if (rewardId) findQuery.reward = rewardId;
+
     const sortBy = 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;
@@ -323,11 +322,10 @@ export class EventService {
     pageSize: number;
     data: Reward[];
   }> {
+    const { type, page, pageSize } = query;
     const findQuery: any = {};
-    if (query.type) findQuery.type = query.type;
-    if (query.name) findQuery.name = { $regex: query.name, $options: 'i' };
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    if (type) findQuery.type = type;
+    
     const sortBy = 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;

@@ -7,26 +7,26 @@ import { Type } from 'class-transformer';
 export class ListEventRewardQuery {
   @IsOptional()
   @IsString()
-  readonly eventId?: string;
+  eventId?: string;
 
   @IsOptional()
   @IsString()
-  readonly rewardId?: string;
+  rewardId?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  readonly page?: number = 1;
+  page: number = 1;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  readonly pageSize?: number = 20;
+  pageSize: number = 20;
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  readonly sortOrder?: 'asc' | 'desc' = 'desc';
+  sortOrder: 'asc' | 'desc' = 'desc';
 } 

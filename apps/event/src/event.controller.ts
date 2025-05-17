@@ -18,9 +18,9 @@ export class EventController {
   ) {}
 
   @MessagePattern({ cmd: 'event.event.create' })
-  async createEvent(@Payload() createEventDto: CreateEventDto) {
+  async createEvent(@Payload() dto: CreateEventDto) {
     try {
-      const event = await this.eventService.createEvent(createEventDto);
+      const event = await this.eventService.createEvent(dto);
       return { success: true, data: event };
     } catch (error) {
       throw new RpcException(error.message || 'Event creation failed');
@@ -28,9 +28,9 @@ export class EventController {
   }
 
   @MessagePattern({ cmd: 'event.event.list' })
-  async listEvents(@Payload() listEventQuery: ListEventQuery) {
+  async listEvents(@Payload() query: ListEventQuery) {
     try {
-      const result = await this.eventService.listEvents(listEventQuery);
+      const result = await this.eventService.listEvents(query);
       return { success: true, ...result };
     } catch (error) {
       throw new RpcException(error.message || 'Event list fetch failed');
