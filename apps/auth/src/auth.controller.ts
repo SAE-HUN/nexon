@@ -11,17 +11,17 @@ export class AuthController {
 
   
   @MessagePattern({ cmd: 'auth.user.signup' })
-  async signUp(@Payload() createUserDto: CreateUserDto) {
-    return this.authService.createUser(createUserDto);
+  async signUp(@Payload() dto: CreateUserDto) {
+    return this.authService.createUser(dto);
   }
 
   @MessagePattern({ cmd: 'auth.user.login' })
-  async login(@Payload() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Payload() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   @MessagePattern({ cmd: 'auth.user.change-role' })
-  async changeUserRole(@Payload() changeUserRoleDto: ChangeUserRoleDto) {
-    return this.authService.changeUserRole(changeUserRoleDto);
+  async changeUserRole(@Payload() dto: ChangeUserRoleDto) {
+    return this.authService.changeUserRole(dto);
   }
 }

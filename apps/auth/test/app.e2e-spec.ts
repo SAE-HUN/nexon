@@ -1,9 +1,10 @@
 jest.setTimeout(30000);
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice, ValidationPipe } from '@nestjs/common';
 import { AuthModule } from './../src/auth.module';
 import { getModelToken } from '@nestjs/mongoose';
-import { User } from '../src/user.schema';
+import { User } from '../src/schema/user.schema';
 import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
