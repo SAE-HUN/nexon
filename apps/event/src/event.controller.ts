@@ -8,6 +8,8 @@ import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
 import { ListRewardRequestQuery } from './dto/list-reward-request.query';
 import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
+import { ListEventRewardQuery } from './dto/list-event-reward.query';
+import { ListRewardQuery } from './dto/list-reward.query';
 
 @Controller()
 export class EventController {
@@ -69,7 +71,7 @@ export class EventController {
   async listRewardRequests(@Payload() query: ListRewardRequestQuery) {
     try {
       const result = await this.eventService.listRewardRequests(query);
-      return { success: true, data: result };
+      return { success: true, ...result };
     } catch (error) {
       throw new RpcException(error.message || 'Reward request list failed');
     }
@@ -112,6 +114,26 @@ export class EventController {
       return { success: true, data: result };
     } catch (error) {
       throw new RpcException(error.message || 'Reward request approve failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.event-reward.list' })
+  async listEventRewards(@Payload() query: ListEventRewardQuery) {
+    try {
+      const result = await this.eventService.listEventRewards(query);
+      return { success: true, ...result };
+    } catch (error) {
+      throw new RpcException(error.message || 'EventReward list fetch failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward.list' })
+  async listRewards(@Payload() query: ListRewardQuery) {
+    try {
+      const result = await this.eventService.listRewards(query);
+      return { success: true, ...result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward list fetch failed');
     }
   }
 }

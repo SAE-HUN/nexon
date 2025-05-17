@@ -15,6 +15,8 @@ import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { ListEventRewardQuery } from './dto/list-event-reward.query';
+import { ListRewardQuery } from './dto/list-reward.query';
 
 @Injectable()
 export class EventService {
@@ -128,19 +130,41 @@ export class EventService {
   }
 
   /**
-   * List reward requests by query
+   * List reward requests by query (pagination, sorting supported)
    */
-  async listRewardRequests(query: ListRewardRequestQuery): Promise<RewardRequest[]> {
+  async listRewardRequests(query: ListRewardRequestQuery): Promise<{
+    total: number;
+    page: number;
+    pageSize: number;
+    data: RewardRequest[];
+  }> {
     const findQuery: any = {};
     if (query.userId) findQuery.userId = query.userId;
     if (query.eventId) findQuery.event = query.eventId;
     if (query.rewardId) findQuery.reward = query.rewardId;
     if (query.status) findQuery.status = query.status;
-    return this.rewardRequestModel
-      .find(findQuery)
-      .populate(Event.name.toLowerCase())
-      .populate(Reward.name.toLowerCase())
-      .exec();
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    const sortBy = 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
+    const [data, total] = await Promise.all([
+      this.rewardRequestModel
+        .find(findQuery)
+        .populate(Event.name.toLowerCase())
+        .populate(Reward.name.toLowerCase())
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.rewardRequestModel.countDocuments(findQuery),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      data,
+    };
   }
 
   /**
@@ -258,5 +282,69 @@ export class EventService {
     //   } },
     // }));
     return updated;
+  }
+  
+  async listEventRewards(query: ListEventRewardQuery): Promise<{
+    total: number;
+    page: number;
+    pageSize: number;
+    data: EventReward[];
+  }> {
+    const findQuery: any = {};
+    if (query.eventId) findQuery.event = query.eventId;
+    if (query.rewardId) findQuery.reward = query.rewardId;
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    const sortBy = 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
+    const [data, total] = await Promise.all([
+      this.eventRewardModel
+        .find(findQuery)
+        .populate('event')
+        .populate('reward')
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.eventRewardModel.countDocuments(findQuery),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      data,
+    };
+  }
+  
+  async listRewards(query: ListRewardQuery): Promise<{
+    total: number;
+    page: number;
+    pageSize: number;
+    data: Reward[];
+  }> {
+    const findQuery: any = {};
+    if (query.type) findQuery.type = query.type;
+    if (query.name) findQuery.name = { $regex: query.name, $options: 'i' };
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const pageSize = query.pageSize && query.pageSize > 0 && query.pageSize <= 100 ? query.pageSize : 20;
+    const sortBy = 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
+    const [data, total] = await Promise.all([
+      this.rewardModel
+        .find(findQuery)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.rewardModel.countDocuments(findQuery),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      data,
+    };
   }
 }
