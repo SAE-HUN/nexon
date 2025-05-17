@@ -11,7 +11,8 @@ import { ListRewardRequestQuery } from '../../event/src/dto/list-reward-request.
 import { LoginDto } from '../../auth/src/dto/login.dto';
 import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
 import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { RejectRewardRequestDto } from '../../event/src/dto/reject-reward-request.dto';
 
 @ApiBearerAuth()
 @Controller()
@@ -70,16 +71,30 @@ export class GatewayController {
     return this.gatewayService.proxyToEvent('event.event-reward.create', dto);
   }
 
-  @Post('reward/request')
+  @Post('reward-request')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('USER')
   async createRewardRequest(@Body() dto: CreateRewardRequestDto) {
     return this.gatewayService.proxyToEvent('event.reward-request.create', dto);
   }
 
-  @Get('reward/request')
+  @Get('reward-request')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async listRewardRequests(@Query() query: ListRewardRequestQuery) {
     return this.gatewayService.proxyToEvent('event.reward-request.list', query);
+  }
+
+  @Patch('reward-request/reject')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'OPERATOR', 'AUDITOR')
+  async rejectRewardRequest(@Body() dto: RejectRewardRequestDto) {
+    return this.gatewayService.proxyToEvent('event.reward-request.reject', dto);
+  }
+
+  @Patch('reward-request/approve')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'OPERATOR', 'AUDITOR')
+  async approveRewardRequest(@Body('rewardRequestId') rewardRequestId: string) {
+    return this.gatewayService.proxyToEvent('event.reward-request.approve', rewardRequestId);
   }
 }
