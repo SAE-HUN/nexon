@@ -1,18 +1,24 @@
+jest.setTimeout(30000);
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestMicroservice } from '@nestjs/common';
+import { INestMicroservice, ValidationPipe } from '@nestjs/common';
 import { AuthModule } from './../src/auth.module';
 import { getModelToken } from '@nestjs/mongoose';
 import { User } from '../src/user.schema';
-import mongoose from 'mongoose';
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
 describe('Auth (microservice e2e)', () => {
   let app: INestMicroservice;
   let client: ClientProxy;
   let userModel: any;
+  let replSet: MongoMemoryReplSet;
 
   beforeAll(async () => {
+    replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+    const uri = replSet.getUri();
+    process.env.AUTH_MONGODB_URI = uri;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AuthModule],
     }).compile();
@@ -21,6 +27,11 @@ describe('Auth (microservice e2e)', () => {
       transport: Transport.TCP,
       options: { host: '127.0.0.1', port: 4000 },
     });
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new RpcException(errors),
+    }));
     await app.listen();
 
     client = ClientProxyFactory.create({
@@ -42,7 +53,9 @@ describe('Auth (microservice e2e)', () => {
     if (client) {
       await client.close();
     }
-    await mongoose.disconnect();
+    if (replSet) {
+      await replSet.stop();
+    }
   });
 
   it('should sign up a new user', async () => {
