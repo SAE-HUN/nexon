@@ -28,6 +28,7 @@ export class EventService {
     @Inject('GAME_SERVICE') private readonly gameClient: ClientProxy,
   ) {}
 
+  // ===== Event =====
   async createEvent(createEventDto: CreateEventDto): Promise<Event> {
     const createdEvent = new this.eventModel(createEventDto);
     return createdEvent.save();
@@ -85,6 +86,7 @@ export class EventService {
     return { ...event.toObject(), rewards: rewardsWithQty };
   }
 
+  // ===== Event-Reward =====
   async createEventReward(dto: CreateEventRewardDto): Promise<EventReward> {
     const { eventId, rewardId, qty } = dto;
     const exists = await this.eventRewardModel.findOne({ event: eventId, reward: rewardId });
@@ -100,9 +102,71 @@ export class EventService {
     return eventReward.save();
   }
 
-  /**
-   * Create a new reward request for a user
-   */
+  async listEventRewards(query: ListEventRewardQuery): Promise<{
+    total: number;
+    page: number;
+    pageSize: number;
+    data: EventReward[];
+  }> {
+    const { eventId, rewardId, page, pageSize } = query;
+    const findQuery: any = {};
+    if (eventId) findQuery.event = eventId;
+    if (rewardId) findQuery.reward = rewardId;
+
+    const sortBy = 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
+    const [data, total] = await Promise.all([
+      this.eventRewardModel
+        .find(findQuery)
+        .populate('event')
+        .populate('reward')
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.eventRewardModel.countDocuments(findQuery),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      data,
+    };
+  }
+
+  // ===== Reward =====
+  async listRewards(query: ListRewardQuery): Promise<{
+    total: number;
+    page: number;
+    pageSize: number;
+    data: Reward[];
+  }> {
+    const { type, page, pageSize } = query;
+    const findQuery: any = {};
+    if (type) findQuery.type = type;
+    
+    const sortBy = 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const skip = (page - 1) * pageSize;
+    const [data, total] = await Promise.all([
+      this.rewardModel
+        .find(findQuery)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.rewardModel.countDocuments(findQuery),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      data,
+    };
+  }
+
+  // ===== Reward-Request =====
   async createRewardRequest(dto: CreateRewardRequestDto): Promise<RewardRequest> {
     const { eventId, rewardId, userId } = dto;
     // 1. Check event exists
@@ -128,9 +192,6 @@ export class EventService {
     return rewardRequest.save();
   }
 
-  /**
-   * List reward requests by query (pagination, sorting supported)
-   */
   async listRewardRequests(query: ListRewardRequestQuery): Promise<{
     total: number;
     page: number;
@@ -166,85 +227,6 @@ export class EventService {
     };
   }
 
-  /**
-   * Rejects a pending reward request atomically using findOneAndUpdate.
-   * @param dto RejectRewardRequestDto
-   * @returns Updated RewardRequest document
-   */
-  async rejectRewardRequest(dto: RejectRewardRequestDto): Promise<RewardRequest> {
-    const { rewardRequestId, reason } = dto;
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
-      { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
-      { status: RewardRequestStatus.REJECTED, reason },
-      { new: true }
-    );
-    if (!updated) {
-      // Check if the request exists at all for better error message
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
-      if (!exists) {
-        throw new RpcException('RewardRequest not found');
-      }
-      throw new RpcException('Only PENDING requests can be rejected');
-    }
-    return updated;
-  }
-
-  /**
-   * @param rewardRequestId string
-   * @returns Updated RewardRequest document
-   */
-  async processRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
-      { _id: rewardRequestId, status: RewardRequestStatus.APPROVED },
-      { status: RewardRequestStatus.PROCESSING },
-      { new: true }
-    );
-    if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
-      if (!exists) {
-        throw new RpcException('RewardRequest not found');
-      }
-      throw new RpcException('Only APPROVED requests can be processed');
-    }
-    return updated;
-  }
-
-  /**
-   * Handles the result of a reward request (success/failure) from external system.
-   * Only updates if current status is PROCESSING (idempotent).
-   * @param dto ResultRewardRequestDto
-   * @returns Updated RewardRequest document
-   */
-  async handleRewardRequestResult(dto: ResultRewardRequestDto): Promise<RewardRequest> {
-    const { rewardRequestId, status, reason } = dto;
-    let update: Partial<RewardRequest> = {};
-    if (status === 'SUCCESS') {
-      update = { status: RewardRequestStatus.SUCCESS, reason: null };
-    } else if (status === 'FAILED') {
-      update = { status: RewardRequestStatus.FAILED, reason: reason || 'Unknown failure' };
-    } else {
-      throw new RpcException('Invalid status');
-    }
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
-      { _id: rewardRequestId, status: RewardRequestStatus.PROCESSING },
-      update,
-      { new: true }
-    );
-    if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
-      if (!exists) {
-        throw new RpcException('RewardRequest not found');
-      }
-      throw new RpcException('Only PROCESSING requests can be updated');
-    }
-    return updated;
-  }
-
-  /**
-   * Approves a pending reward request atomically using findOneAndUpdate.
-   * @param rewardRequestId string
-   * @returns Updated RewardRequest document
-   */
   async approveRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
     const updated = await this.rewardRequestModel.findOneAndUpdate(
       { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
@@ -282,67 +264,63 @@ export class EventService {
     // }));
     return updated;
   }
-  
-  async listEventRewards(query: ListEventRewardQuery): Promise<{
-    total: number;
-    page: number;
-    pageSize: number;
-    data: EventReward[];
-  }> {
-    const { eventId, rewardId, page, pageSize } = query;
-    const findQuery: any = {};
-    if (eventId) findQuery.event = eventId;
-    if (rewardId) findQuery.reward = rewardId;
 
-    const sortBy = 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-    const skip = (page - 1) * pageSize;
-    const [data, total] = await Promise.all([
-      this.eventRewardModel
-        .find(findQuery)
-        .populate('event')
-        .populate('reward')
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(pageSize)
-        .exec(),
-      this.eventRewardModel.countDocuments(findQuery),
-    ]);
-    return {
-      total,
-      page,
-      pageSize,
-      data,
-    };
+  async rejectRewardRequest(dto: RejectRewardRequestDto): Promise<RewardRequest> {
+    const { rewardRequestId, reason } = dto;
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
+      { status: RewardRequestStatus.REJECTED, reason },
+      { new: true }
+    );
+    if (!updated) {
+      // Check if the request exists at all for better error message
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only PENDING requests can be rejected');
+    }
+    return updated;
   }
-  
-  async listRewards(query: ListRewardQuery): Promise<{
-    total: number;
-    page: number;
-    pageSize: number;
-    data: Reward[];
-  }> {
-    const { type, page, pageSize } = query;
-    const findQuery: any = {};
-    if (type) findQuery.type = type;
-    
-    const sortBy = 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-    const skip = (page - 1) * pageSize;
-    const [data, total] = await Promise.all([
-      this.rewardModel
-        .find(findQuery)
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(pageSize)
-        .exec(),
-      this.rewardModel.countDocuments(findQuery),
-    ]);
-    return {
-      total,
-      page,
-      pageSize,
-      data,
-    };
+
+  async processRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.APPROVED },
+      { status: RewardRequestStatus.PROCESSING },
+      { new: true }
+    );
+    if (!updated) {
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only APPROVED requests can be processed');
+    }
+    return updated;
+  }
+
+  async handleRewardRequestResult(dto: ResultRewardRequestDto): Promise<RewardRequest> {
+    const { rewardRequestId, status, reason } = dto;
+    let update: Partial<RewardRequest> = {};
+    if (status === 'SUCCESS') {
+      update = { status: RewardRequestStatus.SUCCESS, reason: null };
+    } else if (status === 'FAILED') {
+      update = { status: RewardRequestStatus.FAILED, reason: reason || 'Unknown failure' };
+    } else {
+      throw new RpcException('Invalid status');
+    }
+    const updated = await this.rewardRequestModel.findOneAndUpdate(
+      { _id: rewardRequestId, status: RewardRequestStatus.PROCESSING },
+      update,
+      { new: true }
+    );
+    if (!updated) {
+      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      if (!exists) {
+        throw new RpcException('RewardRequest not found');
+      }
+      throw new RpcException('Only PROCESSING requests can be updated');
+    }
+    return updated;
   }
 }

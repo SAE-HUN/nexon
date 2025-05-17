@@ -17,6 +17,7 @@ export class EventController {
     private readonly eventService: EventService,
   ) {}
 
+  // ===== Event =====
   @MessagePattern({ cmd: 'event.event.create' })
   async createEvent(@Payload() dto: CreateEventDto) {
     try {
@@ -47,6 +48,7 @@ export class EventController {
     }
   }
 
+  // ===== Event-Reward =====
   @MessagePattern({ cmd: 'event.event-reward.create' })
   async createEventReward(@Payload() dto: CreateEventRewardDto) {
     try {
@@ -57,6 +59,28 @@ export class EventController {
     }
   }
 
+  @MessagePattern({ cmd: 'event.event-reward.list' })
+  async listEventRewards(@Payload() query: ListEventRewardQuery) {
+    try {
+      const result = await this.eventService.listEventRewards(query);
+      return { success: true, ...result };
+    } catch (error) {
+      throw new RpcException(error.message || 'EventReward list fetch failed');
+    }
+  }
+
+  // ===== Reward =====
+  @MessagePattern({ cmd: 'event.reward.list' })
+  async listRewards(@Payload() query: ListRewardQuery) {
+    try {
+      const result = await this.eventService.listRewards(query);
+      return { success: true, ...result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward list fetch failed');
+    }
+  }
+
+  // ===== Reward-Request =====
   @MessagePattern({ cmd: 'event.reward-request.create' })
   async createRewardRequest(@Payload() dto: CreateRewardRequestDto) {
     try {
@@ -74,6 +98,16 @@ export class EventController {
       return { success: true, ...result };
     } catch (error) {
       throw new RpcException(error.message || 'Reward request list failed');
+    }
+  }
+
+  @MessagePattern({ cmd: 'event.reward-request.approve' })
+  async approveRewardRequest(@Payload() rewardRequestId: string) {
+    try {
+      const result = await this.eventService.approveRewardRequest(rewardRequestId);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new RpcException(error.message || 'Reward request approve failed');
     }
   }
 
@@ -104,36 +138,6 @@ export class EventController {
       return { success: true, data: result };
     } catch (error) {
       throw new RpcException(error.message || 'Reward request result handling failed');
-    }
-  }
-
-  @MessagePattern({ cmd: 'event.reward-request.approve' })
-  async approveRewardRequest(@Payload() rewardRequestId: string) {
-    try {
-      const result = await this.eventService.approveRewardRequest(rewardRequestId);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request approve failed');
-    }
-  }
-
-  @MessagePattern({ cmd: 'event.event-reward.list' })
-  async listEventRewards(@Payload() query: ListEventRewardQuery) {
-    try {
-      const result = await this.eventService.listEventRewards(query);
-      return { success: true, ...result };
-    } catch (error) {
-      throw new RpcException(error.message || 'EventReward list fetch failed');
-    }
-  }
-
-  @MessagePattern({ cmd: 'event.reward.list' })
-  async listRewards(@Payload() query: ListRewardQuery) {
-    try {
-      const result = await this.eventService.listRewards(query);
-      return { success: true, ...result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward list fetch failed');
     }
   }
 }
