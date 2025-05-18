@@ -3,6 +3,7 @@ import { EventModule } from './event.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
 
 async function bootstrap() {
   const microservice = await NestFactory.createMicroservice<MicroserviceOptions>(EventModule, {
@@ -19,6 +20,7 @@ async function bootstrap() {
       return new RpcException({ message: errors, status: 400 });
     },
   }));
+  microservice.useGlobalFilters(new RpcExceptionFilter());
   await microservice.listen();
 }
 bootstrap();

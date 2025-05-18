@@ -8,6 +8,7 @@ import { User } from '../src/schema/user.schema';
 import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
 
 describe('Auth (microservice e2e)', () => {
   let app: INestMicroservice;
@@ -33,6 +34,7 @@ describe('Auth (microservice e2e)', () => {
       forbidNonWhitelisted: true,
       exceptionFactory: (errors) => new RpcException(errors),
     }));
+    app.useGlobalFilters(new RpcExceptionFilter());
     await app.listen();
 
     client = ClientProxyFactory.create({
