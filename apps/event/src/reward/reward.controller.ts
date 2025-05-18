@@ -9,11 +9,6 @@ export class RewardController {
 
   @MessagePattern({ cmd: 'event.reward.list' })
   async listRewards(@Payload() query: ListRewardQuery) {
-    try {
-      const result = await this.rewardService.listRewards(query);
-      return { success: true, ...result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward list fetch failed');
-    }
+    return await this.rewardService.listRewards(query);
   }
 } 

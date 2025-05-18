@@ -15,7 +15,9 @@ async function bootstrap() {
   microservice.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
-    exceptionFactory: (errors) => new RpcException(errors),
+    exceptionFactory: (errors) => {
+      return new RpcException({ message: errors, status: 400 });
+    },
   }));
   await microservice.listen();
 }
