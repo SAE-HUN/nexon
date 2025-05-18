@@ -8,6 +8,7 @@ import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 import { RpcException } from '@nestjs/microservices';
 import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class RewardRequestService {
@@ -87,7 +88,9 @@ export class RewardRequestService {
       { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
       { status: RewardRequestStatus.APPROVED },
       { new: true },
-      ['eventReward']
+      [
+        { path: 'eventReward', populate: [{ path: 'event' }, { path: 'reward' }] }
+      ]
     );
     if (!updated) {
       const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
@@ -96,25 +99,25 @@ export class RewardRequestService {
       }
       throw new RpcException({ message: 'Only PENDING requests can be approved', status: 400 });
     }
+
     const eventReward = updated.eventReward;
     const reward = eventReward.reward;
     const type = reward.type;
     const name = reward.name;
     const qty = eventReward.qty;
-    // await firstValueFrom(this.gameClient.send(reward.cmd, {
-    //   userId: updated.userId,
-    //   eventId: updated.event._id,
-    //   rewardId: reward._id,
-    //   type,
-    //   name,
-    //   qty,
-    //   processing: { cmd: 'event.reward-request.process', payload: {
-    //     rewardRequestId: updated._id,
-    //   } },
-    //   callback: { cmd: 'event.reward-request.result', payload: {
-    //     rewardRequestId: updated._id,
-    //   } },
-    // }));
+    await firstValueFrom(this.gameClient.send(reward.cmd, {
+      userId: updated.userId,
+      eventId: eventReward.event._id,
+      rewardId: reward._id,
+      type,
+      name,
+      qty,
+      processing: { cmd: 'event.reward-request.process', payload: updated._id },
+      callback: { cmd: 'event.reward-request.result', payload: {
+        rewardRequestId: updated._id,
+      } },
+    }));
+
     return updated;
   }
 
@@ -154,15 +157,18 @@ export class RewardRequestService {
   async handleRewardRequestResult(dto: ResultRewardRequestDto): Promise<RewardRequest> {
     const { rewardRequestId, status, reason } = dto;
     let update: Partial<RewardRequest> = {};
+    let filter: any = { _id: rewardRequestId };
     if (status === 'SUCCESS') {
       update = { status: RewardRequestStatus.SUCCESS, reason: null };
+      filter.status = RewardRequestStatus.PROCESSING;
     } else if (status === 'FAILED') {
       update = { status: RewardRequestStatus.FAILED, reason: reason || 'Unknown failure' };
+      filter.status = { $in: [RewardRequestStatus.PROCESSING, RewardRequestStatus.APPROVED] };
     } else {
       throw new RpcException({ message: 'Invalid status', status: 400 });
     }
     const updated = await this.rewardRequestRepository.findOneAndUpdate(
-      { _id: rewardRequestId, status: RewardRequestStatus.PROCESSING },
+      filter,
       update,
       { new: true }
     );

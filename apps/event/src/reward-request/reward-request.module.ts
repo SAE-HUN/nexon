@@ -22,7 +22,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'GAME_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.GAME_SERVICE_HOST || 'localhost',
+          host: process.env.GAME_SERVICE_HOST || '127.0.0.1',
           port: parseInt(process.env.GAME_SERVICE_PORT || '4003', 10),
         },
       },
