@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RejectRewardRequestDto {
   @IsString()
@@ -7,5 +8,6 @@ export class RejectRewardRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   reason: string;
 } 

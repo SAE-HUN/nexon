@@ -114,7 +114,6 @@ export class GatewayController {
 
   @Post('reward-request')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('USER')
   async createRewardRequest(@Body() dto: CreateRewardRequestDto) {
     return this.gatewayService.proxyToEvent('event.reward-request.create', dto);
   }
@@ -132,17 +131,17 @@ export class GatewayController {
     return this.gatewayService.proxyToEvent('event.reward-request.list', { ...query, userId: user.userId });
   }
 
-  @Patch('reward-request/reject')
+  @Patch('reward-request/:rewardRequestId/reject')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR', 'AUDITOR')
-  async rejectRewardRequest(@Body() dto: RejectRewardRequestDto) {
-    return this.gatewayService.proxyToEvent('event.reward-request.reject', dto);
+  async rejectRewardRequest(@Param('rewardRequestId') rewardRequestId: string, @Body() dto: RejectRewardRequestDto) {
+    return this.gatewayService.proxyToEvent('event.reward-request.reject', { ...dto, rewardRequestId });
   }
 
-  @Patch('reward-request/approve')
+  @Patch('reward-request/:rewardRequestId/approve')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR', 'AUDITOR')
-  async approveRewardRequest(@Body('rewardRequestId') rewardRequestId: string) {
+  async approveRewardRequest(@Param('rewardRequestId') rewardRequestId: string) {
     return this.gatewayService.proxyToEvent('event.reward-request.approve', rewardRequestId);
   }
 }
