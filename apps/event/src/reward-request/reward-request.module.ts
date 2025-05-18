@@ -22,8 +22,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'GAME_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.GAME_SERVICE_HOST || '127.0.0.1',
-          port: parseInt(process.env.GAME_SERVICE_PORT || '4003', 10),
+          host: process.env.GAME_HOST || '127.0.0.1',
+          port: parseInt(process.env.GAME_PORT || '4003', 10),
         },
       },
     ]),
