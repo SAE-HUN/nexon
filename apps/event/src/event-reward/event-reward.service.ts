@@ -26,7 +26,13 @@ export class EventRewardService {
   }
 
   async listEventRewards(query: ListEventRewardQuery) {
-    const { eventId, rewardId, page, pageSize, sortOrder } = query;
+    const {
+      eventId,
+      rewardId,
+      sortOrder = 'desc',
+      page = 1,
+      pageSize = 20,
+    } = query;
     const findQuery: any = {};
     if (eventId) findQuery.event = eventId;
     if (rewardId) findQuery.reward = rewardId;

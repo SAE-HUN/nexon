@@ -37,7 +37,15 @@ export class RewardRequestService {
     pageSize: number;
     data: RewardRequest[];
   }> {
-    const { userId, eventId, rewardId, status, page, pageSize, sortOrder } = query;
+    const {
+      userId,
+      eventId,
+      rewardId,
+      status,
+      sortOrder = 'desc',
+      page = 1,
+      pageSize = 20,
+    } = query;
     const findQuery: any = {};
     if (userId) findQuery.userId = userId;
     if (status) findQuery.status = status;

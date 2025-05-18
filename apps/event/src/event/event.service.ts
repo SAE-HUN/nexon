@@ -15,7 +15,15 @@ export class EventService {
   }
 
   async listEvents(query: ListEventQuery) {
-    const { isActive, startedAt, endedAt, page, pageSize, sortBy, sortOrder } = query;
+    const {
+      isActive,
+      startedAt,
+      endedAt,
+      sortBy = 'startedAt',
+      sortOrder = 'desc',
+      page = 1,
+      pageSize = 20,
+    } = query;
     const findQuery: any = {};
     if (isActive !== undefined) {
       findQuery.isActive = isActive;

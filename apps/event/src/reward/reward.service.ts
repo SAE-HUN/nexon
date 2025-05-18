@@ -11,7 +11,12 @@ export class RewardService {
   ) {}
 
   async listRewards(query: ListRewardQuery) {
-    const { type, page, pageSize, sortOrder } = query;
+    const {
+      type,
+      sortOrder = 'desc',
+      page = 1,
+      pageSize = 20,
+    } = query;
     const findQuery: any = {};
     if (type) findQuery.type = type;
     const sortBy = 'createdAt';
