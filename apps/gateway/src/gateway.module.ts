@@ -24,16 +24,16 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'AUTH_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.AUTH_TCP_HOST ?? '127.0.0.1',
-          port: parseInt(process.env.AUTH_TCP_PORT ?? '4001', 10),
+          host: process.env.AUTH_HOST ?? '127.0.0.1',
+          port: parseInt(process.env.AUTH_PORT ?? '4001', 10),
         },
       },
       {
         name: 'EVENT_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: process.env.EVENT_TCP_HOST ?? '127.0.0.1',
-          port: parseInt(process.env.EVENT_TCP_PORT ?? '4002', 10),
+          host: process.env.EVENT_HOST ?? '127.0.0.1',
+          port: parseInt(process.env.EVENT_PORT ?? '4002', 10),
         },
       },
     ]),

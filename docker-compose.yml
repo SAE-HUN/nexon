@@ -10,5 +10,50 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongo_data:/data/db
+
+  gateway:
+    build: .
+    container_name: nexon-gateway
+    command: npm run start:dev
+    environment:
+      - PORT=3000
+      - JWT_SECRET=secret111
+      - AUTH_HOST=auth
+      - AUTH_PORT=4001
+      - EVENT_HOST=event
+      - EVENT_PORT=4002
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+      - event
+
+  auth:
+    build: .
+    container_name: nexon-auth
+    command: npm run start:dev auth
+    environment:
+      - AUTH_HOST=auth
+      - AUTH_PORT=4001
+      - JWT_SECRET=secret111
+      - AUTH_MONGODB_URI=mongodb://root:example@mongodb:27017/auth?authSource=admin
+    ports:
+      - "4001:4001"
+    depends_on:
+      - mongodb
+
+  event:
+    build: .
+    container_name: nexon-event
+    command: npm run start:dev event
+    environment:
+      - EVENT_HOST=event
+      - EVENT_PORT=4002
+      - EVENT_MONGODB_URI=mongodb://root:example@mongodb:27017/event?authSource=admin
+    ports:
+      - "4002:4002"
+    depends_on:
+      - mongodb
+
 volumes:
   mongo_data: 
