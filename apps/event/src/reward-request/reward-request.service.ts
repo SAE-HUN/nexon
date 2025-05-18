@@ -20,8 +20,8 @@ export class RewardRequestService {
   async createRewardRequest(dto: CreateRewardRequestDto): Promise<RewardRequest> {
     const { eventRewardId, userId } = dto;
     const eventReward = await this.eventRewardRepository.findById(eventRewardId);
-    if (!eventReward) throw new RpcException({ message: 'EventReward not found', status: 400 });
-    const exists = await this.rewardRequestRepository.findOne({ eventReward: eventRewardId, userId });
+    if (!eventReward) throw new RpcException({ message: 'EventReward not found', status: 404 });
+    const exists = await this.rewardRequestRepository.exists({ eventReward: eventRewardId, userId });
     if (exists) throw new RpcException({ message: 'Duplicate reward request', status: 400 });
     return this.rewardRequestRepository.create({
       eventReward: eventRewardId as any,
@@ -92,7 +92,7 @@ export class RewardRequestService {
     if (!updated) {
       const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
       if (!exists) {
-        throw new RpcException({ message: 'RewardRequest not found', status: 400 });
+        throw new RpcException({ message: 'RewardRequest not found', status: 404 });
       }
       throw new RpcException({ message: 'Only PENDING requests can be approved', status: 400 });
     }
