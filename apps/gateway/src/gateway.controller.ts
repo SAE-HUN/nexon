@@ -16,6 +16,7 @@ import { RejectRewardRequestDto } from '../../event/src/reward-request/dto/rejec
 import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.query';
 import { ListEventRewardQuery } from '../../event/src/event-reward/dto/list-event-reward.query';
 import { Request as ExpressRequest } from 'express';
+import { CreateRewardDto } from 'apps/event/src/reward/dto/create-reward.dto';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -37,6 +38,11 @@ export class GatewayController {
     return this.gatewayService.getHello();
   }
 
+  @Get('auth/hello')
+  async getAuthHello() {
+    return this.gatewayService.proxyToAuth('auth.hello');
+  }
+
   @Post('auth/signup')
   async signUp(@Body() signUpDto: CreateUserDto) {
     return this.gatewayService.proxyToAuth('auth.user.signup', signUpDto);
@@ -52,6 +58,11 @@ export class GatewayController {
   @Roles('ADMIN')
   async changeUserRole(@Body() changeUserRoleDto: ChangeUserRoleDto) {
     return this.gatewayService.proxyToAuth('auth.user.change-role', changeUserRoleDto);
+  }
+
+  @Get('event/hello')
+  async getEventHello() {
+    return this.gatewayService.proxyToEvent('event.hello');
   }
 
   @Post('event')
@@ -71,6 +82,13 @@ export class GatewayController {
   @UseGuards(AuthGuard('jwt'))
   async getEventDetail(@Param('eventId') eventId: string) {
     return this.gatewayService.proxyToEvent('event.event.get', eventId);
+  }
+
+  @Post('reward')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN', 'OPERATOR')
+  async createReward(@Body() createRewardDto: CreateRewardDto) {
+    return this.gatewayService.proxyToEvent('event.reward.create', createRewardDto);
   }
 
   @Get('reward')

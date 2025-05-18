@@ -14,10 +14,10 @@ export class GatewayService {
   }
   
   async proxyToAuth(cmd: string, data?: any): Promise<any> {
-    return await firstValueFrom(this.authClient.send({ cmd }, data));
+    return await firstValueFrom(this.authClient.send({ cmd }, data ?? {}));
   }
 
   async proxyToEvent(cmd: string, data?: any): Promise<any> {
-    return await firstValueFrom(this.eventClient.send({ cmd }, data));
+    return await firstValueFrom(this.eventClient.send({ cmd }, data ?? {}));
   }
 }

@@ -10,6 +10,11 @@ export class EventController {
     private readonly eventService: EventService,
   ) {}
 
+  @MessagePattern({ cmd: 'event.hello' })
+  async getHello() {
+    return "Hello, World!";
+  }
+
   @MessagePattern({ cmd: 'event.event.create' })
   async createEvent(@Payload() dto: CreateEventDto) {
     return await this.eventService.createEvent(dto);

@@ -1,18 +1,23 @@
 import { IsString, IsBoolean, IsDateString } from 'class-validator';
-
+import { ApiProperty } from '@nestjs/swagger';
 export class CreateEventDto {
   @IsString()
+  @ApiProperty()
   title: string;
 
   @IsString()
+  @ApiProperty()
   description: string;
 
   @IsDateString()
-  startedAt: string;
+  @ApiProperty()
+  startedAt: Date;
 
   @IsDateString()
-  endedAt: string;
+  @ApiProperty()
+  endedAt: Date;
 
   @IsBoolean()
+  @ApiProperty()
   isActive: boolean;
 } 
