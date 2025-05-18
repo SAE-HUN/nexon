@@ -116,7 +116,7 @@ describe('Auth (microservice e2e)', () => {
     const fakeId = '60d21b4667d0d8992e610c85';
     await expect(
       firstValueFrom(client.send({ cmd: 'auth.user.change-role' }, { userId: fakeId, role: 'OPERATOR' }))
-    ).rejects.toMatchObject({ message: '존재하지 않는 유저입니다.' });
+    ).rejects.toMatchObject({ message: 'User does not exist.' });
   });
 
   it('should return error for already same role', async () => {
@@ -124,7 +124,7 @@ describe('Auth (microservice e2e)', () => {
     const userId = userRes._id || userRes.id;
     await expect(
       firstValueFrom(client.send({ cmd: 'auth.user.change-role' }, { userId, role: 'USER' }))
-    ).rejects.toMatchObject({ message: '이미 해당 role입니다.' });
+    ).rejects.toMatchObject({ message: 'Already has role.' });
   });
 
   it('should return error for invalid role', async () => {
