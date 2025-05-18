@@ -34,6 +34,7 @@ describe('Event Microservice (e2e)', () => {
     app = moduleFixture.createNestMicroservice({
       transport: Transport.TCP,
       options: { host: '127.0.0.1', port: 4002 },
+      logger: false,
     });
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,
