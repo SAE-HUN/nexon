@@ -37,11 +37,28 @@ export class RewardRequestService {
     pageSize: number;
     data: RewardRequest[];
   }> {
-    const { userId, eventRewardId, status, page, pageSize, sortOrder } = query;
+    const { userId, eventId, rewardId, status, page, pageSize, sortOrder } = query;
     const findQuery: any = {};
     if (userId) findQuery.userId = userId;
-    if (eventRewardId) findQuery.eventReward = eventRewardId;
     if (status) findQuery.status = status;
+
+    let eventRewardIds: string[] | undefined = undefined;
+    if (eventId || rewardId) {
+      const eventRewardQuery: any = {};
+      if (eventId) eventRewardQuery.event = eventId;
+      if (rewardId) eventRewardQuery.reward = rewardId;
+      const eventRewards = await this.eventRewardRepository.findWithRewardPopulate(eventRewardQuery);
+      eventRewardIds = eventRewards.map(er => (er as any)._id.toString());
+      if (eventRewardIds.length === 0) {
+        return {
+          total: 0,
+          page,
+          pageSize,
+          data: [],
+        };
+      }
+      findQuery.eventReward = { $in: eventRewardIds };
+    }
     const sortBy = 'createdAt';
     const order = sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;

@@ -8,7 +8,11 @@ export class ListRewardRequestQuery {
 
   @IsOptional()
   @IsString()
-  eventRewardId?: string;
+  eventId?: string;
+
+  @IsOptional()
+  @IsString()
+  rewardId?: string;
 
   @IsOptional()
   @IsString()
