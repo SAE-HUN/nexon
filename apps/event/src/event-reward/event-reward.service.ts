@@ -16,12 +16,12 @@ export class EventRewardService {
 
   async createEventReward(dto: CreateEventRewardDto) {
     const { eventId, rewardId, qty } = dto;
-    const exists = await this.eventRewardRepository.findOne({ event: eventId, reward: rewardId });
+    const exists = await this.eventRewardRepository.exists({ event: eventId, reward: rewardId });
     if (exists) throw new RpcException({ message: 'This reward is already linked to the event.', status: 400 });
-    const event = await this.eventRepository.findById(eventId);
-    if (!event) throw new RpcException({ message: 'Event does not exist.', status: 400 });
-    const reward = await this.rewardRepository.findById(rewardId);
-    if (!reward) throw new RpcException({ message: 'Reward does not exist.', status: 400 });
+    const eventExists = await this.eventRepository.exists({ _id: eventId });
+    if (!eventExists) throw new RpcException({ message: 'Event does not exist.', status: 404 });
+    const rewardExists = await this.rewardRepository.exists({ _id: rewardId });
+    if (!rewardExists) throw new RpcException({ message: 'Reward does not exist.', status: 404 });
     return this.eventRewardRepository.create(eventId, rewardId, qty);
   }
 

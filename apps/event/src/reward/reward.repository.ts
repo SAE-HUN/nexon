@@ -35,4 +35,8 @@ export class RewardRepository {
   async findOneByTypeAndName(type: string, name: string): Promise<Reward | null> {
     return this.rewardModel.findOne({ type, name }).exec();
   }
+
+  async exists(filter: any): Promise<boolean> {
+    return !!(await this.rewardModel.exists(filter));
+  }
 } 

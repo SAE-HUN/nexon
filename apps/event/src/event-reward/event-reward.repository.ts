@@ -45,4 +45,8 @@ export class EventRewardRepository {
   async findById(id: string): Promise<EventReward | null> {
     return this.eventRewardModel.findById(id).exec();
   }
+
+  async exists(filter: any): Promise<boolean> {
+    return !!(await this.eventRewardModel.exists(filter));
+  }
 } 

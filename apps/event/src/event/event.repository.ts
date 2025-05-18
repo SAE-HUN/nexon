@@ -32,4 +32,8 @@ export class EventRepository {
   async findById(eventId: string): Promise<Event | null> {
     return this.eventModel.findById(eventId).exec();
   }
+
+  async exists(filter: any): Promise<boolean> {
+    return !!(await this.eventModel.exists(filter));
+  }
 } 
