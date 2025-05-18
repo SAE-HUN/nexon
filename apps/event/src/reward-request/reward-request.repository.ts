@@ -40,7 +40,7 @@ export class RewardRequestRepository {
     return !!(await this.rewardRequestModel.exists(filter));
   }
 
-  async findOneAndUpdateWithPopulate(filter: any, update: any, options: any = {}, populateFields: string[] = []): Promise<any> {
+  async findOneAndUpdateWithPopulate(filter: any, update: any, options: any = {}, populateFields: any[] = []): Promise<any> {
     let query = this.rewardRequestModel.findOneAndUpdate(filter, update, options);
     for (const field of populateFields) {
       query = query.populate(field);
