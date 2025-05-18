@@ -9,7 +9,11 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  
+  @MessagePattern({ cmd: 'auth.hello' })
+  async getHello() {
+    return "Hello, World!";
+  }
+
   @MessagePattern({ cmd: 'auth.user.signup' })
   async signUp(@Payload() dto: CreateUserDto) {
     return this.authService.createUser(dto);

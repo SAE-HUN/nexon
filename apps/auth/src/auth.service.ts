@@ -20,23 +20,20 @@ export class AuthService {
    * Create a new user (sign up)
    * @param createUserDto
    */
-  async createUser(dto: CreateUserDto): Promise<User> {
+  async createUser(dto: CreateUserDto) {
     const { email, password } = dto;
     const existing = await this.userModel.findOne({ email });
     if (existing) {
-      throw new RpcException({ message: 'Email already exists', status: 401 });
+      throw new RpcException({ message: 'Email already exists', status: 400 });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    try {
-      const user = new this.userModel({
-        email,
-        password: hashedPassword,
-        role: UserRole.USER,
-      });
-      return await user.save();
-    } catch (err) {
-      throw new RpcException({ message: 'Failed to create user', status: 500 });
-    }
+    const user = new this.userModel({
+      email,
+      password: hashedPassword,
+    role: UserRole.USER,
+    });
+    await user.save();
+    return { id: user.id, email: user.email, role: user.role };
   }
 
   /**
@@ -59,7 +56,7 @@ export class AuthService {
   /**
    * ADMIN이 타 유저의 role을 변경하는 메서드
    */
-  async changeUserRole(dto: ChangeUserRoleDto): Promise<UserDocument> {
+  async changeUserRole(dto: ChangeUserRoleDto) {
     const { userId, role } = dto;
     const user = await this.userModel.findById(userId);
     if (!user) {
@@ -70,6 +67,6 @@ export class AuthService {
     }
     user.role = role;
     await user.save();
-    return user;
+    return { id: user.id, email: user.email, role: user.role };
   }
 }

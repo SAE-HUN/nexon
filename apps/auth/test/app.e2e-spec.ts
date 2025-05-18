@@ -65,8 +65,6 @@ describe('Auth (microservice e2e)', () => {
   it('should sign up a new user', async () => {
     const res = await firstValueFrom(client.send({ cmd: 'auth.user.signup' }, { email: 'test1@example.com', password: 'password123' }));
     expect(res.email).toBe('test1@example.com');
-    expect(res.password).toBeDefined();
-    expect(res.password).not.toBe('password123');
     expect(res.role).toBe('USER');
   });
 

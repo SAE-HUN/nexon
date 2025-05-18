@@ -8,6 +8,6 @@ export class ChangeUserRoleDto {
   userId: string;
 
   @ApiProperty()
-  @IsEnum(UserRole, { message: 'role 값은 UserRole enum 값만 허용됩니다.' })
+  @IsEnum(UserRole)
   role: UserRole;
 }
