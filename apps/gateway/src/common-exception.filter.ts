@@ -15,11 +15,11 @@ export class CommonExceptionFilter implements ExceptionFilter {
 
     const status = exception instanceof HttpException
       ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+      : (exception as any).status ||HttpStatus.INTERNAL_SERVER_ERROR;
 
     const message = exception instanceof HttpException
       ? exception.getResponse()
-      : exception;
+      : (exception as any).message || exception;
 
     const log = {
       timestamp: new Date().toISOString(),

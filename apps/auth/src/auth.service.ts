@@ -24,7 +24,7 @@ export class AuthService {
     const { email, password } = dto;
     const existing = await this.userModel.findOne({ email });
     if (existing) {
-      throw new RpcException({ message: 'Email already exists' });
+      throw new RpcException({ message: 'Email already exists', status: 401 });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
@@ -35,7 +35,7 @@ export class AuthService {
       });
       return await user.save();
     } catch (err) {
-      throw new RpcException('Failed to create user');
+      throw new RpcException({ message: 'Failed to create user', status: 500 });
     }
   }
 
@@ -48,7 +48,7 @@ export class AuthService {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new RpcException('Invalid email or password.');
+      throw new RpcException({ message: 'Invalid email or password.', status: 401 });
     }
     const payload: { sub: string; email: string; role: string } = { sub: user.id, email: user.email, role: user.role };
     return {
@@ -63,10 +63,10 @@ export class AuthService {
     const { userId, role } = dto;
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new RpcException('존재하지 않는 유저입니다.');
+      throw new RpcException({ message: 'User does not exist.', status: 400 });
     }
     if (user.role === role) {
-      throw new RpcException('이미 해당 role입니다.');
+      throw new RpcException({ message: 'Already has role.', status: 400 });
     }
     user.role = role;
     await user.save();
