@@ -1,9 +1,6 @@
 import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
-/**
- * DTO for querying event-reward list
- */
 export class ListEventRewardQuery {
   @IsOptional()
   @IsString()

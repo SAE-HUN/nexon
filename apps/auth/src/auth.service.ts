@@ -16,10 +16,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  /**
-   * Create a new user (sign up)
-   * @param createUserDto
-   */
   async createUser(dto: CreateUserDto) {
     const { email, password } = dto;
     const existing = await this.userModel.findOne({ email });
@@ -35,12 +31,7 @@ export class AuthService {
     await user.save();
     return { id: user.id, email: user.email, role: user.role };
   }
-
-  /**
-   * Validates user credentials and issues a JWT token if valid.
-   * @param loginDto - Login DTO containing email and password
-   * @returns An object containing the access token
-   */
+  
   async login(dto: LoginDto): Promise<{ access_token: string }> {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ email });
@@ -52,10 +43,7 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
-
-  /**
-   * ADMIN이 타 유저의 role을 변경하는 메서드
-   */
+  
   async changeUserRole(dto: ChangeUserRoleDto) {
     const { userId, role } = dto;
     const user = await this.userModel.findById(userId);
