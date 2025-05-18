@@ -10,21 +10,11 @@ export class EventRewardController {
 
   @MessagePattern({ cmd: 'event.event-reward.create' })
   async createEventReward(@Payload() dto: CreateEventRewardDto) {
-    try {
-      const result = await this.eventRewardService.createEventReward(dto);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || '이벤트-보상 연결 실패');
-    }
+    return await this.eventRewardService.createEventReward(dto);
   }
 
   @MessagePattern({ cmd: 'event.event-reward.list' })
   async listEventRewards(@Payload() query: ListEventRewardQuery) {
-    try {
-      const result = await this.eventRewardService.listEventRewards(query);
-      return { success: true, ...result };
-    } catch (error) {
-      throw new RpcException(error.message || 'EventReward list fetch failed');
-    }
+    return await this.eventRewardService.listEventRewards(query);
   }
 } 

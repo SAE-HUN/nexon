@@ -75,7 +75,7 @@ describe('Event Microservice (e2e)', () => {
       isActive: true,
     };
     const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
-    const eventId = eventRes.data._id;
+    const eventId = eventRes._id;
 
     const rewardData = {
       name: 'Test Reward',
@@ -98,7 +98,7 @@ describe('Event Microservice (e2e)', () => {
       isActive: true,
     };
     const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
-    const eventId = eventRes.data._id;
+    const eventId = eventRes._id;
 
     const rewardData = {
       name: 'RewardRequest Reward',
@@ -111,7 +111,7 @@ describe('Event Microservice (e2e)', () => {
 
     const eventRewardDto = { eventId, rewardId, qty: 1 };
     const eventRewardRes: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
-    const eventRewardId = eventRewardRes.data._id;
+    const eventRewardId = eventRewardRes._id;
 
     const userId = '000000000000000000000001'; // 테스트용 임의 ObjectId
     return { eventId, rewardId, eventRewardId, userId };
@@ -128,9 +128,8 @@ describe('Event Microservice (e2e)', () => {
         isActive: true,
       };
       const response: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
-      expect(response.success).toBe(true);
-      expect(response.data.title).toBe(createEventDto.title);
-      expect(response.data._id).toBeDefined();
+      expect(response).toHaveProperty('_id');
+      expect(response.title).toBe(createEventDto.title);
     });
 
     it('should list', async () => {
@@ -144,8 +143,7 @@ describe('Event Microservice (e2e)', () => {
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
       const listEventQuery = { sortBy: 'startedAt', sortOrder: 'desc' };
       const response: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
-      expect(response.success).toBe(true);
-      expect(Array.isArray(response.data)).toBe(true);
+      expect(response).toHaveProperty('data');
       expect(response.data.length).toBeGreaterThan(0);
     });
 
@@ -173,7 +171,7 @@ describe('Event Microservice (e2e)', () => {
         sortOrder: 'desc',
       };
       const resTrue: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQueryTrue));
-      expect(resTrue.success).toBe(true);
+      expect(resTrue).toHaveProperty('data');
       expect(resTrue.data.length).toBe(1);
       expect(resTrue.data[0].isActive).toBe(true);
 
@@ -183,7 +181,7 @@ describe('Event Microservice (e2e)', () => {
         sortOrder: 'desc',
       };
       const resFalse: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQueryFalse));
-      expect(resFalse.success).toBe(true);
+      expect(resFalse).toHaveProperty('data');
       expect(resFalse.data.length).toBe(1);
       expect(resFalse.data[0].isActive).toBe(false);
     });
@@ -213,7 +211,7 @@ describe('Event Microservice (e2e)', () => {
         sortOrder: 'asc',
       };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
-      expect(res.success).toBe(true);
+      expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(1);
       expect(res.data[0].title).toBe('In Range');
     });
@@ -241,7 +239,7 @@ describe('Event Microservice (e2e)', () => {
         sortOrder: 'asc',
       };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
-      expect(res.success).toBe(true);
+      expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(2);
       expect(new Date(res.data[0].startedAt).getTime()).toBeLessThan(new Date(res.data[1].startedAt).getTime());
     });
@@ -265,10 +263,13 @@ describe('Event Microservice (e2e)', () => {
         sortOrder: 'asc',
       };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
-      expect(res.success).toBe(true);
+      expect(res).toHaveProperty('page');
       expect(res.page).toBe(2);
+      expect(res).toHaveProperty('pageSize');
       expect(res.pageSize).toBe(10);
+      expect(res).toHaveProperty('total');
       expect(res.total).toBe(25);
+      expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(10);
       
       expect(res.data[0].title).toBe('Event 11');
@@ -284,10 +285,10 @@ describe('Event Microservice (e2e)', () => {
         isActive: true,
       };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
-      const eventId = createRes.data._id;
+      const eventId = createRes._id;
       const response: any = await firstValueFrom(client.send({ cmd: 'event.event.get' }, eventId));
-      expect(response.success).toBe(true);
-      expect(response.data._id).toBe(eventId);
+      expect(response).toHaveProperty('_id');
+      expect(response._id).toBe(eventId);
     });
 
     it('should fail if not found', async () => {
@@ -308,10 +309,12 @@ describe('Event Microservice (e2e)', () => {
         qty: 5
       };
       const linkRes: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
-      expect(linkRes.success).toBe(true);
-      expect(linkRes.data.event).toBe(eventId);
-      expect(linkRes.data.reward).toBe(rewardId);
-      expect(linkRes.data.qty).toBe(5);
+      expect(linkRes).toHaveProperty('event');
+      expect(linkRes.event).toBe(eventId);
+      expect(linkRes).toHaveProperty('reward');
+      expect(linkRes.reward).toBe(rewardId);
+      expect(linkRes).toHaveProperty('qty');
+      expect(linkRes.qty).toBe(5);
     });
 
     it('should prevent duplication', async () => {
@@ -346,7 +349,7 @@ describe('Event Microservice (e2e)', () => {
         title: 'Event', description: 'D', startedAt: '2024-01-01T00:00:00.000Z', endedAt: '2024-01-02T00:00:00.000Z', isActive: true
       };
       const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
-      const eventId = eventRes.data._id;
+      const eventId = eventRes._id;
       const eventRewardDto = {
         eventId,
         rewardId: '000000000000000000000000',
@@ -366,7 +369,7 @@ describe('Event Microservice (e2e)', () => {
         isActive: true,
       };
       const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
-      const event = eventRes.data;
+      const event = eventRes._id;
 
       const rewards = await Promise.all(Array.from({ length: 8 }).map((_, i) => rewardModel.create({
         name: `ER${i + 1}`,
@@ -378,25 +381,25 @@ describe('Event Microservice (e2e)', () => {
         await firstValueFrom(client.send({
           cmd: 'event.event-reward.create'
         }, {
-          eventId: event._id,
+          eventId: event,
           rewardId: rewards[i]._id,
           qty: i + 1
         }));
       }
       const resAll: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, {}));
-      expect(resAll.success).toBe(true);
-      expect(resAll.total).toBe(8);
+      expect(resAll).toHaveProperty('data');
       expect(resAll.data.length).toBe(8);
 
       const resPage: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { page: 2, pageSize: 3 }));
-      expect(resPage.success).toBe(true);
+      expect(resPage).toHaveProperty('page');
       expect(resPage.page).toBe(2);
+      expect(resPage).toHaveProperty('pageSize');
       expect(resPage.pageSize).toBe(3);
       expect(resPage.data.length).toBe(3);
 
-      const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { eventId: event._id.toString() }));
-      expect(resFilter.success).toBe(true);
-      expect(resFilter.data.every((er: any) => er.event.toString() === event._id.toString() || er.event._id?.toString() === event._id.toString())).toBe(true);
+      const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { eventId: event.toString() }));
+      expect(resFilter).toHaveProperty('data');
+      expect(resFilter.data.every((er: any) => er.event.toString() === event.toString() || er.event._id?.toString() === event.toString())).toBe(true);
     });
   });
 
@@ -415,22 +418,23 @@ describe('Event Microservice (e2e)', () => {
       }
       
       const resAll: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, {}));
-      expect(resAll.success).toBe(true);
-      expect(resAll.total).toBe(15);
+      expect(resAll).toHaveProperty('data');
       expect(resAll.data.length).toBe(15);
       
       const resPage: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { page: 2, pageSize: 5 }));
-      expect(resPage.success).toBe(true);
+      expect(resPage).toHaveProperty('data');
+      expect(resPage.data.length).toBe(5);
       expect(resPage.page).toBe(2);
+      expect(resPage).toHaveProperty('pageSize');
       expect(resPage.pageSize).toBe(5);
       expect(resPage.data.length).toBe(5);
       
       const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { type: 'item' }));
-      expect(resFilter.success).toBe(true);
+      expect(resFilter).toHaveProperty('data');
       expect(resFilter.data.every((r: any) => r.type === 'item')).toBe(true);
 
       const resSort: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { sortOrder: 'asc' }));
-      expect(resSort.success).toBe(true);
+      expect(resSort).toHaveProperty('data');
       expect(resSort.data[0].name).toBe('Reward 1');
     });
   });
@@ -441,9 +445,10 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const dto = { eventRewardId, userId };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
-      expect(res.success).toBe(true);
-      expect(res.data.eventReward).toBe(eventRewardId);
-      expect(res.data.userId).toBe(userId);
+      expect(res).toHaveProperty('eventReward');
+      expect(res.eventReward).toBe(eventRewardId);
+      expect(res).toHaveProperty('userId');
+      expect(res.userId).toBe(userId);
     });
 
     it('should prevent duplicate', async () => {
@@ -469,10 +474,10 @@ describe('Event Microservice (e2e)', () => {
       await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
       const query = { userId };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, query));
-      expect(res.success).toBe(true);
-      expect(Array.isArray(res.data)).toBe(true);
+      expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(1);
       expect(res.data[0].userId).toBe(userId);
+      expect(res.data[0]).toHaveProperty('status');
       expect(res.data[0].status).toBe('PENDING');
     });
 
@@ -480,13 +485,14 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
 
       const rejectDto = { rewardRequestId, reason: '조건 미달' };
       const rejectRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto));
-      expect(rejectRes.success).toBe(true);
-      expect(rejectRes.data.status).toBe('REJECTED');
-      expect(rejectRes.data.reason).toBe('조건 미달');
+      expect(rejectRes).toHaveProperty('status');
+      expect(rejectRes.status).toBe('REJECTED');
+      expect(rejectRes).toHaveProperty('reason');
+      expect(rejectRes.reason).toBe('조건 미달');
     });
 
     it('should not reject non-pending', async () => {
@@ -494,7 +500,7 @@ describe('Event Microservice (e2e)', () => {
 
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, { rewardRequestId }));
       const rejectDto = { rewardRequestId, reason: '이미 거절됨' };
       await expect(
@@ -515,10 +521,10 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       const approveRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
-      expect(approveRes.success).toBe(true);
-      expect(approveRes.data.status).toBe('APPROVED');
+      expect(approveRes).toHaveProperty('status');
+      expect(approveRes.status).toBe('APPROVED');
       const updated = await rewardRequestModel.findById(rewardRequestId);
       expect(updated.status).toBe('APPROVED');
     });
@@ -533,7 +539,7 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId))
@@ -544,20 +550,20 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
 
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
 
       const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
-      expect(processRes.success).toBe(true);
-      expect(processRes.data.status).toBe('PROCESSING');
+      expect(processRes).toHaveProperty('status');
+      expect(processRes.status).toBe('PROCESSING');
     });
 
     it('should fail to process non-approved', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId))
@@ -574,15 +580,15 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
       const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
-      expect(processRes.success).toBe(true);
-      expect(processRes.data.status).toBe('PROCESSING');
+      expect(processRes).toHaveProperty('status');
+      expect(processRes.status).toBe('PROCESSING');
       const resultDto = { rewardRequestId, status: 'SUCCESS' };
       const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
-      expect(resultRes.success).toBe(true);
-      expect(resultRes.data.status).toBe('SUCCESS');
+      expect(resultRes).toHaveProperty('status');
+      expect(resultRes.status).toBe('SUCCESS');
       const updated = await rewardRequestModel.findById(rewardRequestId);
       expect(updated.status).toBe('SUCCESS');
     });
@@ -591,14 +597,15 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
       await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
       const resultDto = { rewardRequestId, status: 'FAILED', reason: '지급 실패' };
       const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
-      expect(resultRes.success).toBe(true);
-      expect(resultRes.data.status).toBe('FAILED');
-      expect(resultRes.data.reason).toBe('지급 실패');
+      expect(resultRes).toHaveProperty('status');
+      expect(resultRes.status).toBe('FAILED');
+      expect(resultRes).toHaveProperty('reason');
+      expect(resultRes.reason).toBe('지급 실패');
       const updated = await rewardRequestModel.findById(rewardRequestId);
       expect(updated.status).toBe('FAILED');
       expect(updated.reason).toBe('지급 실패');
@@ -608,7 +615,7 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       // 상태를 PENDING으로 둔 채 result 호출
       const resultDto = { rewardRequestId, status: 'SUCCESS' };
       await expect(
@@ -627,7 +634,7 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
-      const rewardRequestId = createRes.data._id;
+      const rewardRequestId = createRes._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
       await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
       const resultDto = { rewardRequestId, status: 'INVALID' };

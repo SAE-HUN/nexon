@@ -12,61 +12,31 @@ export class RewardRequestController {
 
   @MessagePattern({ cmd: 'event.reward-request.create' })
   async createRewardRequest(@Payload() dto: CreateRewardRequestDto) {
-    try {
-      const result = await this.rewardRequestService.createRewardRequest(dto);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request failed');
-    }
+    return await this.rewardRequestService.createRewardRequest(dto);
   }
 
   @MessagePattern({ cmd: 'event.reward-request.list' })
   async listRewardRequests(@Payload() query: ListRewardRequestQuery) {
-    try {
-      const result = await this.rewardRequestService.listRewardRequests(query);
-      return { success: true, ...result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request list failed');
-    }
+    return await this.rewardRequestService.listRewardRequests(query);
   }
 
   @MessagePattern({ cmd: 'event.reward-request.approve' })
   async approveRewardRequest(@Payload() rewardRequestId: string) {
-    try {
-      const result = await this.rewardRequestService.approveRewardRequest(rewardRequestId);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request approve failed');
-    }
+    return await this.rewardRequestService.approveRewardRequest(rewardRequestId);
   }
 
   @MessagePattern({ cmd: 'event.reward-request.reject' })
   async rejectRewardRequest(@Payload() dto: RejectRewardRequestDto) {
-    try {
-      const result = await this.rewardRequestService.rejectRewardRequest(dto);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request reject failed');
-    }
+    return await this.rewardRequestService.rejectRewardRequest(dto);
   }
 
   @MessagePattern({ cmd: 'event.reward-request.process' })
   async processRewardRequest(@Payload() rewardRequestId: string) {
-    try {
-      const result = await this.rewardRequestService.processRewardRequest(rewardRequestId);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request process failed');
-    }
+    return await this.rewardRequestService.processRewardRequest(rewardRequestId);
   }
 
   @MessagePattern({ cmd: 'event.reward-request.result' })
   async handleRewardRequestResult(@Payload() dto: ResultRewardRequestDto) {
-    try {
-      const result = await this.rewardRequestService.handleRewardRequestResult(dto);
-      return { success: true, data: result };
-    } catch (error) {
-      throw new RpcException(error.message || 'Reward request result handling failed');
-    }
+    return await this.rewardRequestService.handleRewardRequestResult(dto);
   }
 } 

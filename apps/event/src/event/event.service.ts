@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventRepository } from './event.repository';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventQuery } from './dto/list-event.query';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class EventService {
@@ -10,7 +11,7 @@ export class EventService {
   ) {}
 
   async createEvent(createEventDto: CreateEventDto) {
-    return this.eventRepository.create(createEventDto);
+    return await this.eventRepository.create(createEventDto);
   }
 
   async listEvents(query: ListEventQuery) {
@@ -41,7 +42,7 @@ export class EventService {
 
   async getEventDetail(eventId: string) {
     const event = await this.eventRepository.findById(eventId);
-    if (!event) throw new Error('Event not found');
+    if (!event) throw new RpcException({ message: 'Event not found', status: 404 });
     return event;
   }
 }

@@ -4,6 +4,7 @@ import { EventRepository } from '../event/event.repository';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
 import { ListEventRewardQuery } from './dto/list-event-reward.query';
 import { RewardRepository } from '../reward/reward.repository';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class EventRewardService {
@@ -16,11 +17,11 @@ export class EventRewardService {
   async createEventReward(dto: CreateEventRewardDto) {
     const { eventId, rewardId, qty } = dto;
     const exists = await this.eventRewardRepository.findOne({ event: eventId, reward: rewardId });
-    if (exists) throw new Error('This reward is already linked to the event.');
+    if (exists) throw new RpcException({ message: 'This reward is already linked to the event.', status: 400 });
     const event = await this.eventRepository.findById(eventId);
-    if (!event) throw new Error('Event does not exist.');
+    if (!event) throw new RpcException({ message: 'Event does not exist.', status: 400 });
     const reward = await this.rewardRepository.findById(rewardId);
-    if (!reward) throw new Error('Reward does not exist.');
+    if (!reward) throw new RpcException({ message: 'Reward does not exist.', status: 400 });
     return this.eventRewardRepository.create(eventId, rewardId, qty);
   }
 
