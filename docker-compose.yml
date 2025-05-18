@@ -27,6 +27,7 @@ services:
     depends_on:
       - auth
       - event
+      - game
 
   auth:
     build: .
@@ -50,10 +51,24 @@ services:
       - EVENT_HOST=event
       - EVENT_PORT=4002
       - EVENT_MONGODB_URI=mongodb://root:example@mongodb:27017/event?authSource=admin
+      - GAME_HOST=game
+      - GAME_PORT=4003
     ports:
       - "4002:4002"
     depends_on:
       - mongodb
+
+  game:
+    build: .
+    container_name: nexon-game
+    command: npm run start:dev game
+    environment:
+      - GAME_HOST=game
+      - GAME_PORT=4003
+      - EVENT_HOST=event
+      - EVENT_PORT=4002
+    ports:
+      - "4003:4003"
 
 volumes:
   mongo_data: 
