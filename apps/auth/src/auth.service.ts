@@ -9,6 +9,7 @@ import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 import { LoginDto } from './dto/login.dto';
 import { RpcException } from '@nestjs/microservices';
 import { UserRole } from './enum/user-role.enum';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -18,7 +19,7 @@ export class AuthService {
 
   async createUser(dto: CreateUserDto) {
     const { email, password } = dto;
-    const existing = await this.userModel.findOne({ email });
+    const existing = await this.userModel.exists({ email });
     if (existing) {
       throw new RpcException({ message: 'Email already exists', status: 400 });
     }
