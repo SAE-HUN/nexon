@@ -35,7 +35,7 @@ export class RewardService {
   }
 
   async createReward(dto: CreateRewardDto) {
-    const exist = await this.rewardRepository.findOneByTypeAndName(dto.type, dto.name);
+    const exist = await this.rewardRepository.exists({ type: dto.type, name: dto.name });
     if (exist) {
       throw new RpcException({ message: 'Duplicate reward', status: 400 });
     }
