@@ -47,4 +47,20 @@ export class RewardRequestRepository {
     }
     return query.exec();
   }
+
+  async findWithPopulate(query: any, sortBy: string, sortOrder: 1 | -1, skip: number, limit: number) {
+    return this.rewardRequestModel
+      .find(query)
+      .populate({
+        path: 'eventReward',
+        populate: [
+          { path: 'event' },
+          { path: 'reward' }
+        ]
+      })
+      .sort({ [sortBy]: sortOrder } as any)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
 } 

@@ -23,10 +23,6 @@ export class EventRewardRepository {
     return this.eventRewardModel.findOne(query).exec();
   }
 
-  async findWithPopulate(query: any): Promise<EventReward[]> {
-    return this.eventRewardModel.find(query).populate('event').populate('reward').exec();
-  }
-
   async findWithPopulateAndPaging(query: any, sortBy: string, sortOrder: 1 | -1, skip: number, limit: number): Promise<EventReward[]> {
     return this.eventRewardModel
       .find(query)
@@ -48,5 +44,9 @@ export class EventRewardRepository {
 
   async exists(filter: any): Promise<boolean> {
     return !!(await this.eventRewardModel.exists(filter));
+  }
+
+  async findIds(query: any): Promise<{ _id: any }[]> {
+    return this.eventRewardModel.find(query).select('_id').exec();
   }
 } 

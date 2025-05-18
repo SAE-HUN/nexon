@@ -55,8 +55,8 @@ export class RewardRequestService {
       const eventRewardQuery: any = {};
       if (eventId) eventRewardQuery.event = eventId;
       if (rewardId) eventRewardQuery.reward = rewardId;
-      const eventRewards = await this.eventRewardRepository.findWithRewardPopulate(eventRewardQuery);
-      eventRewardIds = eventRewards.map(er => (er as any)._id.toString());
+      const eventRewards = await this.eventRewardRepository.findIds(eventRewardQuery);
+      eventRewardIds = eventRewards.map(er => er._id.toString());
       if (eventRewardIds.length === 0) {
         return {
           total: 0,
@@ -71,7 +71,7 @@ export class RewardRequestService {
     const order = sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;
     const [data, total] = await Promise.all([
-      this.rewardRequestRepository.find(findQuery, sortBy, order, skip, pageSize),
+      this.rewardRequestRepository.findWithPopulate(findQuery, sortBy, order, skip, pageSize),
       this.rewardRequestRepository.count(findQuery),
     ]);
     return {

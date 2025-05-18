@@ -491,6 +491,11 @@ describe('Event Microservice (e2e)', () => {
       expect(res.data[0].userId).toBe(userId);
       expect(res.data[0]).toHaveProperty('status');
       expect(res.data[0].status).toBe('PENDING');
+      expect(res.data[0]).toHaveProperty('eventReward');
+      expect(res.data[0].eventReward).toHaveProperty('event');
+      expect(res.data[0].eventReward).toHaveProperty('reward');
+      expect(res.data[0].eventReward.event).toHaveProperty('title');
+      expect(res.data[0].eventReward.reward).toHaveProperty('name');
     });
 
     it('should reject pending', async () => {
