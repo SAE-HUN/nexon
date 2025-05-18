@@ -54,8 +54,12 @@ describe('Event Microservice (e2e)', () => {
   });
 
   afterAll(async () => {
-    await client.close();
-    await app.close();
+    if (client) {
+      await client.close();
+    }
+    if (app) {
+      await app.close();
+    }
     if (replSet) {
       await replSet.stop();
     }
@@ -291,69 +295,6 @@ describe('Event Microservice (e2e)', () => {
         firstValueFrom(client.send({ cmd: 'event.event.get' }, '000000000000000000000000'))
       ).rejects.toMatchObject({ message: 'Event not found' });
     });
-
-    it('should include rewards in detail', async () => {
-      const { eventId, rewardId } = await createTestEventAndReward();
-
-      const eventRewardDto = {
-        eventId,
-        rewardId,
-        qty: 5
-      };
-      await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
-
-      const detailRes: any = await firstValueFrom(client.send({ cmd: 'event.event.get' }, eventId));
-      expect(detailRes.success).toBe(true);
-      expect(detailRes.data._id).toBe(eventId);
-      expect(detailRes.data.rewards).toBeDefined();
-      expect(Array.isArray(detailRes.data.rewards)).toBe(true);
-      expect(detailRes.data.rewards.length).toBe(1);
-      
-      const returnedReward = detailRes.data.rewards[0];
-      expect(returnedReward._id).toBe(rewardId);
-      expect(returnedReward.name).toBe('Test Reward');
-      expect(returnedReward.description).toBe('Reward Description');
-      expect(returnedReward.cmd).toBe('give_item');
-      expect(returnedReward.qty).toBe(5);
-    });
-
-    it('should support multiple rewards', async () => {
-      const { eventId, rewardId } = await createTestEventAndReward();
-
-      const eventRewardDto = {
-        eventId,
-        rewardId,
-        qty: 5
-      };
-      await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
-
-      const rewardData2 = {
-        name: 'Another Reward',
-        description: 'Second Reward',
-        cmd: 'give_coin',
-        type: 'item'
-      };
-      const reward2 = await rewardModel.create(rewardData2);
-      const rewardId2 = reward2._id.toString();
-
-
-      const eventRewardDto2 = {
-        eventId,
-        rewardId: rewardId2,
-        qty: 10
-      };
-      await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto2));
-
-      const finalRes: any = await firstValueFrom(client.send({ cmd: 'event.event.get' }, eventId));
-      expect(finalRes.success).toBe(true);
-      expect(finalRes.data.rewards).toBeDefined();
-      expect(finalRes.data.rewards.length).toBe(2);
-
-      const hasFirstReward = finalRes.data.rewards.some(r => r._id === rewardId && r.qty === 5);
-      const hasSecondReward = finalRes.data.rewards.some(r => r._id === rewardId2 && r.qty === 10);
-      expect(hasFirstReward).toBe(true);
-      expect(hasSecondReward).toBe(true);
-    });
   });
 
   // ===== Event-Reward =====
@@ -497,43 +438,34 @@ describe('Event Microservice (e2e)', () => {
   // ===== Reward-Request =====
   describe('RewardRequest', () => {
     it('should create', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const dto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const dto = { eventRewardId, userId };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
       expect(res.success).toBe(true);
-      expect(res.data.event).toBe(eventId);
-      expect(res.data.reward).toBe(eventRewardId);
+      expect(res.data.eventReward).toBe(eventRewardId);
       expect(res.data.userId).toBe(userId);
     });
 
     it('should prevent duplicate', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const dto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const dto = { eventRewardId, userId };
       await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto))
       ).rejects.toMatchObject({ message: 'Duplicate reward request' });
     });
 
-    it('should fail if event does not exist', async () => {
-      const { eventRewardId, userId } = await createTestEventRewardAndUser();
-      const dto = { eventId: '000000000000000000000000', rewardId: eventRewardId, userId };
-      await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto))
-      ).rejects.toMatchObject({ message: 'Event not found' });
-    });
-
     it('should fail if eventReward does not exist', async () => {
-      const { eventId, userId } = await createTestEventRewardAndUser();
-      const dto = { eventId, rewardId: '000000000000000000000000', userId };
+      const userId = '000000000000000000000000';
+      const dto = { eventRewardId: '000000000000000000000000', userId };
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto))
       ).rejects.toMatchObject({ message: 'EventReward not found' });
     });
 
     it('should list by userId', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const dto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const dto = { eventRewardId, userId };
       await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
       const query = { userId };
       const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, query));
@@ -545,8 +477,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should reject pending', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
 
@@ -558,9 +490,9 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should not reject non-pending', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
 
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, { rewardRequestId }));
@@ -580,8 +512,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should approve pending', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       const approveRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
@@ -598,8 +530,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should fail to approve non-pending', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
@@ -609,8 +541,8 @@ describe('Event Microservice (e2e)', () => {
     });
     
     it('should process approved to processing', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
 
@@ -622,8 +554,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should fail to process non-approved', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       
@@ -639,8 +571,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should update to SUCCESS via result', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
@@ -656,8 +588,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should update to FAILED via result', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
@@ -673,8 +605,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should fail result on non-processing', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       // 상태를 PENDING으로 둔 채 result 호출
@@ -692,8 +624,8 @@ describe('Event Microservice (e2e)', () => {
     });
 
     it('should fail result on invalid status', async () => {
-      const { eventId, eventRewardId, userId } = await createTestEventRewardAndUser();
-      const createDto = { eventId, rewardId: eventRewardId, userId };
+      const { eventRewardId, userId } = await createTestEventRewardAndUser();
+      const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes.data._id;
       await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));

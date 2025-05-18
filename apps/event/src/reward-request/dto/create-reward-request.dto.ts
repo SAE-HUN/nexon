@@ -5,8 +5,5 @@ export class CreateRewardRequestDto {
   userId: string;
 
   @IsString()
-  eventId: string;
-
-  @IsString()
-  rewardId: string;
+  eventRewardId: string;
 } 

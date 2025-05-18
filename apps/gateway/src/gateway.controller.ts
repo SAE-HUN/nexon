@@ -3,18 +3,18 @@ import { GatewayService } from './gateway.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
-import { CreateEventDto } from '../../event/src/dto/create-event.dto';
-import { ListEventQuery } from '../../event/src/dto/list-event.query';
-import { CreateEventRewardDto } from '../../event/src/dto/create-event-reward.dto';
-import { CreateRewardRequestDto } from '../../event/src/dto/create-reward-request.dto';
-import { ListRewardRequestQuery } from '../../event/src/dto/list-reward-request.query';
+import { CreateEventDto } from '../../event/src/event/dto/create-event.dto';
+import { ListEventQuery } from '../../event/src/event/dto/list-event.query';
+import { CreateEventRewardDto } from '../../event/src/event-reward/dto/create-event-reward.dto';
+import { CreateRewardRequestDto } from '../../event/src/reward-request/dto/create-reward-request.dto';
+import { ListRewardRequestQuery } from '../../event/src/reward-request/dto/list-reward-request.query';
 import { LoginDto } from '../../auth/src/dto/login.dto';
 import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
 import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
-import { ApiBearerAuth, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
-import { RejectRewardRequestDto } from '../../event/src/dto/reject-reward-request.dto';
-import { ListRewardQuery } from '../../event/src/dto/list-reward.query';
-import { ListEventRewardQuery } from '../../event/src/dto/list-event-reward.query';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { RejectRewardRequestDto } from '../../event/src/reward-request/dto/reject-reward-request.dto';
+import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.query';
+import { ListEventRewardQuery } from '../../event/src/event-reward/dto/list-event-reward.query';
 
 @ApiBearerAuth()
 @Controller()

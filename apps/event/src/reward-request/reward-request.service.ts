@@ -1,10 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { RewardRequest, RewardRequestDocument, RewardRequestStatus } from './schema/reward-request.schema';
-import { Event, EventDocument } from '../event/schema/event.schema';
-import { EventReward, EventRewardDocument } from '../event-reward/schema/event-reward.schema';
-import { Reward } from '../reward/schema/reward.schema';
+import { RewardRequestRepository } from './reward-request.repository';
+import { EventRewardRepository } from '../event-reward/event-reward.repository';
+import { RewardRequest, RewardRequestStatus } from './schema/reward-request.schema';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
 import { ListRewardRequestQuery } from './dto/list-reward-request.query';
 import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
@@ -15,28 +12,23 @@ import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class RewardRequestService {
   constructor(
-    @InjectModel(RewardRequest.name) private readonly rewardRequestModel: Model<RewardRequestDocument>,
-    @InjectModel(Event.name) private readonly eventModel: Model<EventDocument>,
-    @InjectModel(EventReward.name) private readonly eventRewardModel: Model<EventRewardDocument>,
+    private readonly rewardRequestRepository: RewardRequestRepository,
+    private readonly eventRewardRepository: EventRewardRepository,
     @Inject('GAME_SERVICE') private readonly gameClient: ClientProxy,
   ) {}
 
   async createRewardRequest(dto: CreateRewardRequestDto): Promise<RewardRequest> {
-    const { eventId, rewardId, userId } = dto;
-    const event = await this.eventModel.findById(eventId);
-    if (!event) throw new RpcException('Event not found');
-    const eventReward = await this.eventRewardModel.findById(rewardId);
+    const { eventRewardId, userId } = dto;
+    const eventReward = await this.eventRewardRepository.findById(eventRewardId);
     if (!eventReward) throw new RpcException('EventReward not found');
-    const exists = await this.rewardRequestModel.findOne({ event: eventId, reward: rewardId, userId });
+    const exists = await this.rewardRequestRepository.findOne({ eventReward: eventRewardId, userId });
     if (exists) throw new RpcException('Duplicate reward request');
-    const rewardRequest = new this.rewardRequestModel({
-      event: eventId,
-      reward: rewardId,
+    return this.rewardRequestRepository.create({
+      eventReward: eventRewardId as any,
       userId,
       status: RewardRequestStatus.PENDING,
       reason: null,
     });
-    return rewardRequest.save();
   }
 
   async listRewardRequests(query: ListRewardRequestQuery): Promise<{
@@ -45,25 +37,17 @@ export class RewardRequestService {
     pageSize: number;
     data: RewardRequest[];
   }> {
-    const { userId, eventId, rewardId, status, page, pageSize } = query;
+    const { userId, eventRewardId, status, page, pageSize, sortOrder } = query;
     const findQuery: any = {};
     if (userId) findQuery.userId = userId;
-    if (eventId) findQuery.event = eventId;
-    if (rewardId) findQuery.reward = rewardId;
+    if (eventRewardId) findQuery.eventReward = eventRewardId;
     if (status) findQuery.status = status;
     const sortBy = 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+    const order = sortOrder === 'asc' ? 1 : -1;
     const skip = (page - 1) * pageSize;
     const [data, total] = await Promise.all([
-      this.rewardRequestModel
-        .find(findQuery)
-        .populate(Event.name.toLowerCase())
-        .populate(Reward.name.toLowerCase())
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(pageSize)
-        .exec(),
-      this.rewardRequestModel.countDocuments(findQuery),
+      this.rewardRequestRepository.find(findQuery, sortBy, order, skip, pageSize),
+      this.rewardRequestRepository.count(findQuery),
     ]);
     return {
       total,
@@ -74,21 +58,20 @@ export class RewardRequestService {
   }
 
   async approveRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
+    const updated = await this.rewardRequestRepository.findOneAndUpdateWithPopulate(
       { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
       { status: RewardRequestStatus.APPROVED },
-      { new: true }
-    )
-      .populate(Event.name.toLowerCase())
-      .populate(Reward.name.toLowerCase());
+      { new: true },
+      ['eventReward']
+    );
     if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
       if (!exists) {
         throw new RpcException('RewardRequest not found');
       }
       throw new RpcException('Only PENDING requests can be approved');
     }
-    const eventReward = updated.reward;
+    const eventReward = updated.eventReward;
     const reward = eventReward.reward;
     const type = reward.type;
     const name = reward.name;
@@ -112,13 +95,13 @@ export class RewardRequestService {
 
   async rejectRewardRequest(dto: RejectRewardRequestDto): Promise<RewardRequest> {
     const { rewardRequestId, reason } = dto;
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
+    const updated = await this.rewardRequestRepository.findOneAndUpdate(
       { _id: rewardRequestId, status: RewardRequestStatus.PENDING },
       { status: RewardRequestStatus.REJECTED, reason },
       { new: true }
     );
     if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
       if (!exists) {
         throw new RpcException('RewardRequest not found');
       }
@@ -128,13 +111,13 @@ export class RewardRequestService {
   }
 
   async processRewardRequest(rewardRequestId: string): Promise<RewardRequest> {
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
+    const updated = await this.rewardRequestRepository.findOneAndUpdate(
       { _id: rewardRequestId, status: RewardRequestStatus.APPROVED },
       { status: RewardRequestStatus.PROCESSING },
       { new: true }
     );
     if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
       if (!exists) {
         throw new RpcException('RewardRequest not found');
       }
@@ -153,13 +136,13 @@ export class RewardRequestService {
     } else {
       throw new RpcException('Invalid status');
     }
-    const updated = await this.rewardRequestModel.findOneAndUpdate(
+    const updated = await this.rewardRequestRepository.findOneAndUpdate(
       { _id: rewardRequestId, status: RewardRequestStatus.PROCESSING },
       update,
       { new: true }
     );
     if (!updated) {
-      const exists = await this.rewardRequestModel.exists({ _id: rewardRequestId });
+      const exists = await this.rewardRequestRepository.exists({ _id: rewardRequestId });
       if (!exists) {
         throw new RpcException('RewardRequest not found');
       }

@@ -1,7 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Event } from '../../event/schema/event.schema';
-import { EventDocument } from '../../event/schema/event.schema';
 import { EventRewardDocument } from '../../event-reward/schema/event-reward.schema';
 import { EventReward } from '../../event-reward/schema/event-reward.schema';
 
@@ -20,17 +18,10 @@ export type RewardRequestDocument = RewardRequest & Document;
 export class RewardRequest {
   @Prop({
     type: MongooseSchema.Types.ObjectId,
-    ref: Event.name,
-    required: true,
-  })
-  event: EventDocument;
-
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
     ref: EventReward.name,
     required: true,
   })
-  reward: EventRewardDocument; 
+  eventReward: EventRewardDocument; 
   
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
   userId: string;
@@ -48,4 +39,4 @@ export class RewardRequest {
 }
 
 export const RewardRequestSchema = SchemaFactory.createForClass(RewardRequest);
-RewardRequestSchema.index({ event: 1, reward: 1, userId: 1 }, { unique: true }); 
+RewardRequestSchema.index({ eventReward: 1, userId: 1 }, { unique: true }); 
