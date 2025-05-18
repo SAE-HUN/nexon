@@ -34,10 +34,6 @@ export class RewardService {
     };
   }
 
-  /**
-   * Create a new reward if type+name combination does not exist.
-   * Throws RpcException(409) if duplicate exists.
-   */
   async createReward(dto: CreateRewardDto) {
     const exist = await this.rewardRepository.findOneByTypeAndName(dto.type, dto.name);
     if (exist) {
