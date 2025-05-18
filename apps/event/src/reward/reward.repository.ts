@@ -26,4 +26,13 @@ export class RewardRepository {
   async findById(id: string): Promise<Reward | null> {
     return this.rewardModel.findById(id).exec();
   }
+
+  async create(createRewardDto: Partial<Reward>): Promise<Reward> {
+    const createdReward = new this.rewardModel(createRewardDto);
+    return await createdReward.save();
+  }
+
+  async findOneByTypeAndName(type: string, name: string): Promise<Reward | null> {
+    return this.rewardModel.findOne({ type, name }).exec();
+  }
 } 

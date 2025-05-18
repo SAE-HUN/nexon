@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { RewardRepository } from './reward.repository';
 import { ListRewardQuery } from './dto/list-reward.query';
+import { CreateRewardDto } from './dto/create-reward.dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class RewardService {
@@ -25,5 +27,17 @@ export class RewardService {
       pageSize,
       data,
     };
+  }
+
+  /**
+   * Create a new reward if type+name combination does not exist.
+   * Throws RpcException(409) if duplicate exists.
+   */
+  async createReward(dto: CreateRewardDto) {
+    const exist = await this.rewardRepository.findOneByTypeAndName(dto.type, dto.name);
+    if (exist) {
+      throw new RpcException({ message: 'Duplicate reward', status: 400 });
+    }
+    return this.rewardRepository.create(dto);
   }
 } 
