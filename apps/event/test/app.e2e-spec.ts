@@ -101,7 +101,7 @@ describe('Event Microservice (e2e)', () => {
     return { eventId, rewardId };
   }
 
-  async function createTestEventRewardAndUser() {
+  async function createTestEventRewardAndUser(rewardType: string = "item", rewardName: string = "RewardRequest Reward") {
     const eventDto = {
       title: 'RewardRequest Event',
       description: 'Event for reward request',
@@ -113,10 +113,10 @@ describe('Event Microservice (e2e)', () => {
     const eventId = eventRes._id;
 
     const rewardData = {
-      name: 'RewardRequest Reward',
+      name: rewardName,
       description: 'Reward for reward request',
       cmd: 'give_item',
-      type: 'item',
+      type: rewardType,
     };
     const reward = await rewardModel.create(rewardData);
     const rewardId = reward._id.toString();
@@ -653,6 +653,28 @@ describe('Event Microservice (e2e)', () => {
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
       ).rejects.toMatchObject(expect.anything());
+    });
+
+    it('should list by eventId, rewardId, userId, status', async () => {
+      const { eventId, eventRewardId } = await createTestEventRewardAndUser("item", "RewardRequest Reward");
+      const userId = "000000000000000000000000";
+      const { eventId: eventId2, rewardId: rewardId2, eventRewardId: eventRewardId2 } = await createTestEventRewardAndUser("item", "RewardRequest Reward2");
+      const userId2 = "000000000000000000000001";
+      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId, userId }));
+      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId: eventRewardId2, userId: userId2 }));
+      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId: eventRewardId2, userId }));
+
+      let res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId, userId, status: 'PENDING' }));
+      expect(res.data.length).toBe(1);
+      expect(res.data[0].userId).toBe(userId);
+      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { rewardId: rewardId2, userId, status: 'PENDING' }));
+      expect(res.data.length).toBe(1);
+      expect(res.data[0].userId).toBe(userId);
+      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId: eventId2, rewardId: rewardId2, userId, status: 'PENDING' }));
+      expect(res.data.length).toBe(1);
+      expect(res.data[0].userId).toBe(userId);
+      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId: '000000000000000000000000', userId, status: 'PENDING' }));
+      expect(res.data.length).toBe(0);
     });
   });
 });
