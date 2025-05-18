@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RewardService } from './reward.service';
-import { ListRewardQuery } from './dto/list-reward.query';
+import { ListRewardQuery } from './dto/list-reward.dto';
 import { CreateRewardDto } from './dto/create-reward.dto';
 
 @Controller()

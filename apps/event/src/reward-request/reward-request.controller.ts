@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { RewardRequestService } from './reward-request.service';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
-import { ListRewardRequestQuery } from './dto/list-reward-request.query';
+import { ListRewardRequestQuery } from './dto/list-reward-request.dto';
 import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 

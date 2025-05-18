@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { EventRewardService } from './event-reward.service';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
-import { ListEventRewardQuery } from './dto/list-event-reward.query';
+import { ListEventRewardQuery } from './dto/list-event-reward.dto';
 
 @Controller()
 export class EventRewardController {

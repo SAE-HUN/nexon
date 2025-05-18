@@ -3,7 +3,7 @@ import { RewardRequestRepository } from './reward-request.repository';
 import { EventRewardRepository } from '../event-reward/event-reward.repository';
 import { RewardRequest, RewardRequestStatus } from './schema/reward-request.schema';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
-import { ListRewardRequestQuery } from './dto/list-reward-request.query';
+import { ListRewardRequestQuery } from './dto/list-reward-request.dto';
 import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 import { RpcException } from '@nestjs/microservices';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventRepository } from './event.repository';
 import { CreateEventDto } from './dto/create-event.dto';
-import { ListEventQuery } from './dto/list-event.query';
+import { ListEventQuery } from './dto/list-event.dto';
 import { RpcException } from '@nestjs/microservices';
 
 @Injectable()

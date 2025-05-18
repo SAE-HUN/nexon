@@ -1,37 +1,28 @@
 import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class ListRewardRequestQuery {
+/**
+ * DTO for querying reward list
+ */
+export class ListRewardQuery {
   @IsOptional()
   @IsString()
-  userId?: string;
-
-  @IsOptional()
-  @IsString()
-  eventId?: string;
-
-  @IsOptional()
-  @IsString()
-  rewardId?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
+  type?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page: number = 1;
+  page?: number = 1;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  pageSize: number = 20;
+  pageSize?: number = 20;
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortOrder: 'asc' | 'desc' = 'desc';
+  sortOrder?: string = 'desc';
 } 

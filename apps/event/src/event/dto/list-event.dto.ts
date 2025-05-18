@@ -4,11 +4,11 @@ import { Type } from 'class-transformer';
 export class ListEventQuery {
   @IsOptional()
   @IsDateString()
-  startedAt?: string;
+  startedAt?: Date;
 
   @IsOptional()
   @IsDateString()
-  endedAt?: string;
+  endedAt?: Date;
 
   @IsOptional()
   @IsBoolean()
@@ -16,22 +16,22 @@ export class ListEventQuery {
 
   @IsOptional()
   @IsIn(['startedAt', 'endedAt'])
-  sortBy: 'startedAt' | 'endedAt' = 'startedAt';
+  sortBy?: string = 'startedAt';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortOrder: 'asc' | 'desc' = 'desc';
+  sortOrder?: string = 'desc';
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page: number = 1;
+  page?: number = 1;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  pageSize: number = 20;
+  pageSize?: number = 20;
 } 
