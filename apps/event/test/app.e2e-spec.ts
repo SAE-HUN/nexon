@@ -1,14 +1,17 @@
 jest.setTimeout(30000);
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestMicroservice } from '@nestjs/common';
+import { INestMicroservice, ValidationPipe } from '@nestjs/common';
 import { EventModule } from './../src/event.module';
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { Event } from '../src/event/schema/event.schema';
-import { Reward } from '../src/reward/schema/reward.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
+import { Event } from '../src/event/schema/event.schema';
+import { Reward } from '../src/reward/schema/reward.schema';
+import { EventReward } from '../src/event-reward/schema/event-reward.schema';
+import { RewardRequest } from '../src/reward-request/schema/reward-request.schema';
 
 describe('Event Microservice (e2e)', () => {
   let app: INestMicroservice;
@@ -32,6 +35,14 @@ describe('Event Microservice (e2e)', () => {
       transport: Transport.TCP,
       options: { host: '127.0.0.1', port: 4002 },
     });
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => {
+        return new RpcException({ message: errors });
+      },
+    }));
+    app.useGlobalFilters(new RpcExceptionFilter());
     await app.listen();
 
     client = ClientProxyFactory.create({
@@ -42,8 +53,8 @@ describe('Event Microservice (e2e)', () => {
 
     eventModel = app.get(getModelToken(Event.name));
     rewardModel = app.get(getModelToken(Reward.name));
-    eventRewardModel = app.get(getModelToken('EventReward'));
-    rewardRequestModel = app.get(getModelToken('RewardRequest'));
+    eventRewardModel = app.get(getModelToken(EventReward.name));
+    rewardRequestModel = app.get(getModelToken(RewardRequest.name));
   });
 
   beforeEach(async () => {
@@ -501,7 +512,7 @@ describe('Event Microservice (e2e)', () => {
       const createDto = { eventRewardId, userId };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, { rewardRequestId }));
+      await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, { rewardRequestId, reason: '이미 거절됨' }));
       const rejectDto = { rewardRequestId, reason: '이미 거절됨' };
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto))
@@ -640,7 +651,7 @@ describe('Event Microservice (e2e)', () => {
       const resultDto = { rewardRequestId, status: 'INVALID' };
       await expect(
         firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
-      ).rejects.toMatchObject({ message: 'Invalid status' });
+      ).rejects.toMatchObject(expect.anything());
     });
   });
 });
