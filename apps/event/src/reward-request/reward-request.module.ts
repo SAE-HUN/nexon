@@ -9,6 +9,8 @@ import { EventRewardSchema } from '../event-reward/schema/event-reward.schema';
 import { EventReward } from '../event-reward/schema/event-reward.schema';
 import { EventRewardRepository } from '../event-reward/event-reward.repository';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { EventService } from '../event/event.service';
+import { EventModule } from '../event/event.module';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       { name: EventReward.name, schema: EventRewardSchema },
     ]),
     EventRewardModule,
+    EventModule,
     ClientsModule.register([
       {
         name: 'GAME_SERVICE',
@@ -29,7 +32,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ]),
   ],
   controllers: [RewardRequestController],
-  providers: [RewardRequestService, RewardRequestRepository, EventRewardRepository],
+  providers: [RewardRequestService, RewardRequestRepository, EventRewardRepository, EventService],
   exports: [RewardRequestService, RewardRequestRepository],
 })
 export class RewardRequestModule {} 
