@@ -1,9 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Reward } from '../../reward/schema/reward.schema';
-import { Event } from '../../event/schema/event.schema';
-import { EventDocument } from '../../event/schema/event.schema';
-import { RewardDocument } from '../../reward/schema/reward.schema';
+import { Event, EventDocument } from '../../event/schema/event.schema';
+import { Reward, RewardDocument } from '../../reward/schema/reward.schema';
 
 export type EventRewardDocument = EventReward & Document;
 

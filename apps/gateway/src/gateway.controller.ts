@@ -1,33 +1,33 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  UseGuards,
-  Query,
   Param,
+  Patch,
+  Post,
+  Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { GatewayService } from './gateway.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Roles } from './roles.decorator';
-import { RolesGuard } from './roles.guard';
-import { CreateEventDto } from '../../event/src/event/dto/create-event.dto';
-import { ListEventQuery } from '../../event/src/event/dto/list-event.dto';
-import { CreateEventRewardDto } from '../../event/src/event-reward/dto/create-event-reward.dto';
-import { CreateRewardRequestDto } from '../../event/src/reward-request/dto/create-reward-request.dto';
-import { ListRewardRequestQuery } from '../../event/src/reward-request/dto/list-reward-request.dto';
-import { LoginDto } from '../../auth/src/dto/login.dto';
-import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
-import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { RejectRewardRequestDto } from '../../event/src/reward-request/dto/reject-reward-request.dto';
-import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.dto';
-import { ListEventRewardQuery } from '../../event/src/event-reward/dto/list-event-reward.dto';
-import { Request as ExpressRequest } from 'express';
 import { CreateRewardDto } from 'apps/event/src/reward/dto/create-reward.dto';
 import { CreateUserActionDto } from 'apps/event/src/user-action/dto/create-user-action.dto';
+import { Request as ExpressRequest } from 'express';
+import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
+import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
+import { LoginDto } from '../../auth/src/dto/login.dto';
+import { CreateEventRewardDto } from '../../event/src/event-reward/dto/create-event-reward.dto';
+import { ListEventRewardQuery } from '../../event/src/event-reward/dto/list-event-reward.dto';
+import { CreateEventDto } from '../../event/src/event/dto/create-event.dto';
+import { ListEventQuery } from '../../event/src/event/dto/list-event.dto';
+import { CreateRewardRequestDto } from '../../event/src/reward-request/dto/create-reward-request.dto';
+import { ListRewardRequestQuery } from '../../event/src/reward-request/dto/list-reward-request.dto';
+import { RejectRewardRequestDto } from '../../event/src/reward-request/dto/reject-reward-request.dto';
+import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.dto';
+import { GatewayService } from './gateway.service';
+import { Roles } from './roles.decorator';
+import { RolesGuard } from './roles.guard';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { EventRewardRepository } from './event-reward.repository';
+import { RpcException } from '@nestjs/microservices';
 import { EventRepository } from '../event/event.repository';
+import { RewardRepository } from '../reward/reward.repository';
 import { CreateEventRewardDto } from './dto/create-event-reward.dto';
 import { ListEventRewardQuery } from './dto/list-event-reward.dto';
-import { RewardRepository } from '../reward/reward.repository';
-import { RpcException } from '@nestjs/microservices';
+import { EventRewardRepository } from './event-reward.repository';
 
 @Injectable()
 export class EventRewardService {

@@ -1,19 +1,19 @@
 jest.setTimeout(30000);
 
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice, ValidationPipe } from '@nestjs/common';
-import { AuthModule } from './../src/auth.module';
-import { getModelToken } from '@nestjs/mongoose';
-import { User } from '../src/schema/user.schema';
 import {
   ClientProxy,
   ClientProxyFactory,
   RpcException,
   Transport,
 } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { firstValueFrom } from 'rxjs';
 import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
+import { User } from '../src/schema/user.schema';
+import { AuthModule } from './../src/auth.module';
 
 describe('Auth (microservice e2e)', () => {
   let app: INestMicroservice;

@@ -1,23 +1,22 @@
 jest.setTimeout(30000);
 
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice, ValidationPipe } from '@nestjs/common';
-import { EventModule } from './../src/event.module';
 import {
   ClientProxy,
   ClientProxyFactory,
   RpcException,
   Transport,
 } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { firstValueFrom, of } from 'rxjs';
 import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
-import { Event } from '../src/event/schema/event.schema';
-import { Reward } from '../src/reward/schema/reward.schema';
 import { EventReward } from '../src/event-reward/schema/event-reward.schema';
+import { Event } from '../src/event/schema/event.schema';
 import { RewardRequest } from '../src/reward-request/schema/reward-request.schema';
-import { of } from 'rxjs';
+import { Reward } from '../src/reward/schema/reward.schema';
+import { EventModule } from './../src/event.module';
 
 describe('Event Microservice (e2e)', () => {
   let app: INestMicroservice;

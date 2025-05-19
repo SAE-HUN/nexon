@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as jwt from 'jsonwebtoken';
 import * as request from 'supertest';
 import { GatewayModule } from './../src/gateway.module';
-import * as jwt from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
 
 /**
  * End-to-end tests for GatewayController role-based access control

@@ -1,10 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { EventRepository } from './event.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventQuery } from './dto/list-event.dto';
-import { RpcException, ClientProxy } from '@nestjs/microservices';
+import { EventRepository } from './event.repository';
 import { Condition } from './schema/event.schema';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class EventService {

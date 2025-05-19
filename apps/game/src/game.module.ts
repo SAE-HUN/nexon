@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { GameController } from './game.controller';
 import { GameService } from './game.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserAction, UserActionSchema } from './schema/user-action.schema';
 import { UserActionController } from './user-action.controller';
-import { UserActionService } from './user-action.service';
 import { UserActionRepository } from './user-action.repository';
+import { UserActionService } from './user-action.service';
 
 @Module({
   imports: [

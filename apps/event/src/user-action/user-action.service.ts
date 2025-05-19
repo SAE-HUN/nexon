@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UserActionRepository } from './user-action.repository';
 import { CreateUserActionDto } from './dto/create-user-action.dto';
+import { UserActionRepository } from './user-action.repository';
 
 @Injectable()
 export class UserActionService {

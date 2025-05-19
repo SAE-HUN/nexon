@@ -1,18 +1,17 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { RewardRequestRepository } from './reward-request.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { EventRewardRepository } from '../event-reward/event-reward.repository';
-import {
-  RewardRequest,
-  RewardRequestStatus,
-} from './schema/reward-request.schema';
+import { EventService } from '../event/event.service';
 import { CreateRewardRequestDto } from './dto/create-reward-request.dto';
 import { ListRewardRequestQuery } from './dto/list-reward-request.dto';
 import { RejectRewardRequestDto } from './dto/reject-reward-request.dto';
 import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
-import { RpcException } from '@nestjs/microservices';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
-import { EventService } from '../event/event.service';
+import { RewardRequestRepository } from './reward-request.repository';
+import {
+  RewardRequest,
+  RewardRequestStatus,
+} from './schema/reward-request.schema';
 
 @Injectable()
 export class RewardRequestService {
@@ -233,7 +232,7 @@ export class RewardRequestService {
   ): Promise<RewardRequest> {
     const { rewardRequestId, status, reason } = dto;
     let update: Partial<RewardRequest> = {};
-    let filter: any = { _id: rewardRequestId };
+    const filter: any = { _id: rewardRequestId };
     if (status === 'SUCCESS') {
       update = { status: RewardRequestStatus.SUCCESS, reason: null };
       filter.status = RewardRequestStatus.PROCESSING;

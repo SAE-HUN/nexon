@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UserActionService } from './user-action.service';
 import { CreateUserActionDto } from './dto/create-user-action.dto';
+import { UserActionService } from './user-action.service';
 
 @Controller()
 export class UserActionController {

@@ -1,9 +1,12 @@
-import { NestFactory } from '@nestjs/core';
-import { AuthModule } from './auth.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { NestFactory } from '@nestjs/core';
+import {
+  MicroserviceOptions,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
 import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
+import { AuthModule } from './auth.module';
 
 async function bootstrap() {
   const microservice =

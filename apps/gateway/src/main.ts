@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { GatewayModule } from './gateway.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CommonExceptionFilter } from './common-exception.filter';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { GatewayModule } from './gateway.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);

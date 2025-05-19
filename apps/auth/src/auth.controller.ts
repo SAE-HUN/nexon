@@ -1,9 +1,9 @@
 import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
+import { ChangeUserRoleDto } from './dto/change-user-role.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { ChangeUserRoleDto } from './dto/change-user-role.dto';
-import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller()
 export class AuthController {

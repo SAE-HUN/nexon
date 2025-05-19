@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { EventRewardDocument } from '../../event-reward/schema/event-reward.schema';
-import { EventReward } from '../../event-reward/schema/event-reward.schema';
+import {
+  EventReward,
+  EventRewardDocument,
+} from '../../event-reward/schema/event-reward.schema';
 
 export enum RewardRequestStatus {
   PENDING = 'PENDING',

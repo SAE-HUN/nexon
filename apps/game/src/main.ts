@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { GameModule } from './game.module';
 import { Transport } from '@nestjs/microservices';
+import { GameModule } from './game.module';
 
 async function bootstrap() {
   const microservice = await NestFactory.createMicroservice(GameModule, {
