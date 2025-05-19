@@ -87,8 +87,8 @@ export class GatewayController {
 
   @Get('event/:eventId/check-condition')
   @UseGuards(AuthGuard('jwt'))
-  async checkEventCondition(@Param('eventId') eventId: string, @Req() req: AuthenticatedRequest) {
-    return this.gatewayService.proxyToEvent('event.event.check-condition', { eventId, userId: req.user.userId });
+  async checkEventCondition(@Param('eventId') eventId: string, @Query('userId') userId: string) {
+    return this.gatewayService.proxyToEvent('event.event.check-condition', { eventId, userId });
   }
 
   @Post('user-action')
@@ -135,8 +135,9 @@ export class GatewayController {
 
   @Post('reward-request')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async createRewardRequest(@Body() dto: CreateRewardRequestDto) {
-    return this.gatewayService.proxyToEvent('event.reward-request.create', dto);
+  async createRewardRequest(@Body() dto: CreateRewardRequestDto, @Req() req: AuthenticatedRequest) {
+    const user = req.user;
+    return this.gatewayService.proxyToEvent('event.reward-request.create', { ...dto, userId: user.userId });
   }
 
   @Get('reward-request')
