@@ -9,12 +9,14 @@ import { ResultRewardRequestDto } from './dto/result-reward-request.dto';
 import { RpcException } from '@nestjs/microservices';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { EventService } from '../event/event.service';
 
 @Injectable()
 export class RewardRequestService {
   constructor(
     private readonly rewardRequestRepository: RewardRequestRepository,
     private readonly eventRewardRepository: EventRewardRepository,
+    private readonly eventService: EventService,
     @Inject('GAME_SERVICE') private readonly gameClient: ClientProxy,
   ) {}
 
@@ -24,6 +26,12 @@ export class RewardRequestService {
     if (!eventReward) throw new RpcException({ message: 'EventReward not found', status: 404 });
     const exists = await this.rewardRequestRepository.exists({ eventReward: eventRewardId, userId });
     if (exists) throw new RpcException({ message: 'Duplicate reward request', status: 400 });
+    const eventId = eventReward.event.toString();
+    const conditionResult = await this.eventService.checkUserEventCondition(eventId, userId);
+    if (!conditionResult.success) {
+      throw new RpcException({ message: 'Event condition not met', detail: conditionResult.detail, status: 400 });
+    }
+    
     return this.rewardRequestRepository.create({
       eventReward: eventRewardId as any,
       userId,
