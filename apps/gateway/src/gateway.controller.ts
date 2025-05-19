@@ -17,6 +17,7 @@ import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.dto';
 import { ListEventRewardQuery } from '../../event/src/event-reward/dto/list-event-reward.dto';
 import { Request as ExpressRequest } from 'express';
 import { CreateRewardDto } from 'apps/event/src/reward/dto/create-reward.dto';
+import { CreateUserActionDto } from 'apps/event/src/user-action/dto/create-user-action.dto';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -88,6 +89,20 @@ export class GatewayController {
   @UseGuards(AuthGuard('jwt'))
   async checkEventCondition(@Param('eventId') eventId: string, @Req() req: AuthenticatedRequest) {
     return this.gatewayService.proxyToEvent('event.event.check-condition', { eventId, userId: req.user.userId });
+  }
+
+  @Post('user-action')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('ADMIN', 'OPERATOR')
+  async createUserAction(@Body() createUserActionDto: CreateUserActionDto) {
+    return this.gatewayService.proxyToEvent('event.user-action.create', createUserActionDto);
+  }
+
+  @Get('user-action')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('ADMIN', 'OPERATOR')
+  async listUserActions() {
+    return this.gatewayService.proxyToEvent('event.user-action.list');
   }
 
   @Post('reward')
