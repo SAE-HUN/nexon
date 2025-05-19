@@ -84,6 +84,12 @@ export class GatewayController {
     return this.gatewayService.proxyToEvent('event.event.get', eventId);
   }
 
+  @Get('event/:eventId/check-condition')
+  @UseGuards(AuthGuard('jwt'))
+  async checkEventCondition(@Param('eventId') eventId: string, @Req() req: AuthenticatedRequest) {
+    return this.gatewayService.proxyToEvent('event.event.check-condition', { eventId, userId: req.user.userId });
+  }
+
   @Post('reward')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
