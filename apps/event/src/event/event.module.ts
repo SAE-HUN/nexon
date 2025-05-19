@@ -4,23 +4,14 @@ import { EventController } from './event.controller';
 import { EventService } from './event.service';
 import { EventRepository } from './event.repository';
 import { Event, EventSchema } from './schema/event.schema';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Event.name, schema: EventSchema },
     ]),
-    ClientsModule.register([
-      {
-        name: 'GAME_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.GAME_HOST || '127.0.0.1',
-          port: parseInt(process.env.GAME_PORT || '4003', 10),
-        },
-      },
-    ]),
+    SharedModule,
   ],
   controllers: [EventController],
   providers: [EventService, EventRepository],
