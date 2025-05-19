@@ -13,10 +13,10 @@ export class EventService {
     @Inject('GAME_SERVICE') private readonly gameClient: ClientProxy,
   ) {}
 
-  private validateConditionTree(condition: Condition): { valid: boolean; reason?: string } {
+  private validateConditionTree(condition: Condition, maxDepth: number = 3, maxLeafCount: number = 4): { valid: boolean; reason?: string } {
     let leafCount = 0;
     function traverse(node: Condition, depth: number): boolean {
-      if (depth > 2) return false;
+      if (depth > maxDepth) return false;
       if (node.op === 'AND' || node.op === 'OR') {
         if (!Array.isArray(node.children) || node.children.length === 0) return false;
         for (const child of node.children) {
@@ -31,9 +31,9 @@ export class EventService {
         return false;
       }
     }
-    const valid = traverse(condition, 1) && leafCount > 0 && leafCount <= 4;
+    const valid = traverse(condition, 1) && leafCount > 0 && leafCount <= maxLeafCount;
     if (!valid) {
-      if (leafCount > 4) return { valid: false, reason: 'Too many leaf conditions (max 4)' };
+      if (leafCount > maxLeafCount) return { valid: false, reason: 'Too many leaf conditions (max ' + maxLeafCount + ')' };
       return { valid: false, reason: 'Invalid condition structure' };
     }
     return { valid: true };

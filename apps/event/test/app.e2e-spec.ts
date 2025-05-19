@@ -337,6 +337,76 @@ describe('Event Microservice (e2e)', () => {
         firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto))
       ).rejects.toMatchObject({ message: 'Invalid condition structure' });
     });
+
+    it('should create and check complex AND/OR condition (all true)', async () => {
+      const createEventDto = {
+        title: 'Complex AND/OR',
+        description: 'complex AND/OR',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2024-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: {
+          op: 'AND',
+          children: [
+            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 },
+            { op: '>=', cmd: 'get_referral', field: 'referral', value: 7 },
+            {
+              op: 'OR',
+              children: [
+                { op: '>=', cmd: 'get_purchase', field: 'purchase', value: 7 },
+                { op: '>=', cmd: 'get_score', field: 'score', value: 7 },
+              ]
+            }
+          ]
+        }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(true);
+    });
+
+    it('should fail if any AND child fails', async () => {
+      const createEventDto = {
+        title: 'AND Fail',
+        description: 'AND fail',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2024-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: {
+          op: 'AND',
+          children: [
+            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 },
+            { op: '>=', cmd: 'get_referral', field: 'referral', value: 8 } // 7 >= 8 false
+          ]
+        }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(false);
+    });
+
+    it('should pass if any OR child passes', async () => {
+      const createEventDto = {
+        title: 'OR Pass',
+        description: 'OR pass',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2024-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: {
+          op: 'OR',
+          children: [
+            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 8 }, // 7 >= 8 false
+            { op: '>=', cmd: 'get_referral', field: 'referral', value: 7 } // 7 >= 7 true
+          ]
+        }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(true);
+    });
   });
 
   // ===== Event-Reward =====
