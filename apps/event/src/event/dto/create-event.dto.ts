@@ -1,4 +1,6 @@
-import { IsString, IsBoolean, IsDateString } from 'class-validator';
+import { IsString, IsBoolean, IsDateString, IsObject } from 'class-validator';
+import { Type } from 'class-transformer';
+import { Condition } from '../schema/event.schema';
 
 export class CreateEventDto {
   @IsString()
@@ -15,4 +17,8 @@ export class CreateEventDto {
 
   @IsBoolean()
   isActive: boolean;
+
+  @IsObject()
+  @Type(() => Object)
+  condition: Condition;
 } 

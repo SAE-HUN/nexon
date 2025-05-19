@@ -19,6 +19,20 @@ export class Event {
 
   @Prop({ required: true })
   isActive: boolean;
+
+  @Prop({
+    type: Object,
+    required: true,
+  })
+  condition: Condition;
+}
+
+export interface Condition {
+  op: 'AND' | 'OR' | '==' | '>=' | '<=';
+  children?: Condition[];
+  cmd?: string;
+  field?: string;
+  value?: number;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event); 

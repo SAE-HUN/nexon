@@ -85,6 +85,7 @@ describe('Event Microservice (e2e)', () => {
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-01-31T23:59:59.999Z',
       isActive: true,
+      condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
     };
     const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
     const eventId = eventRes._id;
@@ -108,6 +109,7 @@ describe('Event Microservice (e2e)', () => {
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-01-31T23:59:59.999Z',
       isActive: true,
+      condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
     };
     const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
     const eventId = eventRes._id;
@@ -138,6 +140,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const response: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
       expect(response).toHaveProperty('_id');
@@ -151,6 +154,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
       const listEventQuery = { sortBy: 'startedAt', sortOrder: 'desc' };
@@ -166,6 +170,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const createEventDto2 = {
         title: 'Inactive Event',
@@ -173,6 +178,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-03T00:00:00.000Z',
         endedAt: '2024-01-04T00:00:00.000Z',
         isActive: false,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto1));
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto2));
@@ -205,6 +211,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const createEventDtoOutRange = {
         title: 'Out Range',
@@ -212,6 +219,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-02-01T00:00:00.000Z',
         endedAt: '2024-02-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoInRange));
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoOutRange));
@@ -235,6 +243,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const createEventDtoLate = {
         title: 'Late',
@@ -242,6 +251,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-02-01T00:00:00.000Z',
         endedAt: '2024-02-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoEarly));
       await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoLate));
@@ -263,6 +273,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: `2024-01-${(i + 1).toString().padStart(2, '0')}T00:00:00.000Z`,
         endedAt: `2024-01-${(i + 2).toString().padStart(2, '0')}T00:00:00.000Z`,
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       }));
       for (const createEventDto of events) {
         await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
@@ -295,6 +306,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const createRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
       const eventId = createRes._id;
@@ -307,6 +319,20 @@ describe('Event Microservice (e2e)', () => {
       await expect(
         firstValueFrom(client.send({ cmd: 'event.event.get' }, '000000000000000000000000'))
       ).rejects.toMatchObject({ message: 'Event not found' });
+    });
+
+    it('should fail with invalid condition', async () => {
+      const createEventDto = {
+        title: 'Invalid Event',
+        description: 'Invalid',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2024-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', value: 7 }
+      };
+      await expect(
+        firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto))
+      ).rejects.toMatchObject({ message: 'Invalid condition structure' });
     });
   });
 
@@ -358,7 +384,12 @@ describe('Event Microservice (e2e)', () => {
 
     it('should fail if reward does not exist', async () => {
       const eventDto = {
-        title: 'Event', description: 'D', startedAt: '2024-01-01T00:00:00.000Z', endedAt: '2024-01-02T00:00:00.000Z', isActive: true
+        title: 'Event',
+        description: 'D',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2024-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
       const eventId = eventRes._id;
@@ -379,6 +410,7 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-31T23:59:59.999Z',
         isActive: true,
+        condition: { op: '==', cmd: 'get_login_days', field: 'loginDays', value: 7 }
       };
       const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
       const event = eventRes._id;

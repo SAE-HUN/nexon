@@ -29,4 +29,9 @@ export class EventController {
   async getEventDetail(@Payload() eventId: string) {
     return await this.eventService.getEventDetail(eventId);
   }
+
+  @MessagePattern({ cmd: 'event.event.check-condition' })
+  async checkUserEventCondition(@Payload() payload: { eventId: string; userId: string }) {
+    return await this.eventService.checkUserEventCondition(payload.eventId, payload.userId);
+  }
 }
