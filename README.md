@@ -1,8 +1,8 @@
-## 이벤트 / 보상 관리 플랫폼
+# 이벤트 / 보상 관리 플랫폼
 
 
 
-### 아키텍처
+## 아키텍처
 ```mermaid
 flowchart LR
     User["Client (User/Admin)"]
@@ -22,7 +22,7 @@ flowchart LR
     Game -- 지급 검증 / 결과 콜백 --> Event
 ```
 
-**주요 컴포넌트**
+### 주요 컴포넌트
 
 1. Gateway API
 - 목적: HTTP 엔드포인트가 있는 API 진입점
@@ -44,7 +44,7 @@ flowchart LR
 4. Game 서비스
 - 기능: 게임 보상 지급 및 사용자 데이터 조회
 
-**코드 구조**
+### 코드 구조
 
 NestJS에서 권장하는 구조를 따릅니다:
 - Controller: 들어오는 요청 처리
@@ -53,7 +53,8 @@ NestJS에서 권장하는 구조를 따릅니다:
 - DTO: 데이터 구조 정의 및 검증
 - Schema: 데이터베이스 모델 정의
 
-### 데이터 모델링
+
+## 데이터 모델링
 
 ```mermaid
 erDiagram
@@ -98,16 +99,15 @@ erDiagram
         string reason
     }
 ```
-**인덱싱**
+### 인덱싱
 - RewardRequest
     - 중복 보상 요청 방지를 위해 userId + eventReward을 복합 인덱싱으로 Unique 처리
     - 조회 성능을 위해 userId 인덱싱(ref가 아니므로 별도 인덱싱 필요)
 - EventReward
     - 중복 이벤트 보상 생성 방지를 위해 Event + Reward을 복합 인덱싱으로 Unique 처리
 
-### 주요 구현 포인트
----
-**보상 지급 플로우**
+## 주요 구현 포인트
+### 보상 지급 플로우
 ```mermaid
 sequenceDiagram
     participant User as User (Client)
@@ -122,11 +122,13 @@ sequenceDiagram
     GameSvc-->>EventSvc: 사용자 게임 지표 반환 (예: 로그인 횟수)
     Note over EventSvc: 조건 불충족 시, 보상 신청 불가
     EventSvc-->>Gateway: 생성된 RewardRequest(PENDING) 반환
+    Gateway-->>User: 
     Admin->>Gateway: PATCH /reward-requests/:id/approve
     Gateway->>EventSvc: event.reward-request.approve
     EventSvc -->> EventSvc: PENDING -> APPROVED
     EventSvc->>GameSvc: game.reward.process (Async)
-    EventSvc-->>Admin: 승인된 RewardRequest 반환
+    EventSvc-->>Gateway: 승인된 RewardRequest 반환
+    Gateway-->>Admin: 
     GameSvc->>EventSvc: event.reward-request.process
     EventSvc-->>EventSvc: APPROVED -> PROCESSING
     Note over EventSvc: PROCESSING 처리 실패 시, 지급 불가
@@ -138,7 +140,7 @@ sequenceDiagram
 
 지급 요청을 받는 서비스와 실제 지급이 이루어지는 서비스가 분리되어있는 MSA 시스템으로 가정하였습니다. 중복 지급을 방지하기 위해 PROCESSING 처리 절차를 추가하였고, 결과를 전달받기 위해 Callback 기능을 구현하였습니다.
 
-**이벤트 조건 검사**
+### 이벤트 조건 검사
 
 - 세밀하면서 자유로운 조건을 설정할 수 있도록 조건식에 트리 자료 구조를 사용하였습니다.
 - 트리 구조의 조건들을 재귀 호출을 이용하여 평가하도록 구현하였습니다.
@@ -179,14 +181,13 @@ const condition = {
 3. ==, >=, <= 등의 비교 연산 노드는 실제 값을 게임 서비스에서 조회하여 조건을 판단합니다.
 4. 각각의 평가 결과는 트리 상위 노드로 전달되어 최종 판단에 반영됩니다.
 
-**동시성**
+### 동시성
 
 
 
-**Gateway: HTTP<->TCP 이종간의 연동**
+### Gateway: HTTP<->TCP 이종간의 연동
 
-### 실행 & 테스트
----
+## 실행 & 테스트
 **실행**
 ```bash
 docker-compose up
@@ -197,5 +198,4 @@ npm run test:e2e:auth
 npm run test:e2e:event
 ```
 
-### 회고
----
+## 회고
