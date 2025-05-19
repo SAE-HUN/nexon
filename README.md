@@ -128,13 +128,13 @@ sequenceDiagram
     GameSvc-->>EventSvc: 사용자 게임 지표 반환 (예: 로그인 횟수)
     Note over EventSvc: 조건 불충족 시, 보상 신청 불가
     EventSvc-->>Gateway: 생성된 RewardRequest(PENDING) 반환
-    Gateway-->>User:
+    Gateway-->>User: 
     Admin->>Gateway: PATCH /reward-requests/:id/approve
     Gateway->>EventSvc: event.reward-request.approve
     EventSvc -->> EventSvc: PENDING -> APPROVED
     EventSvc->>GameSvc: game.reward.process (Async)
     EventSvc-->>Gateway: 승인된 RewardRequest 반환
-    Gateway-->>Admin:
+    Gateway-->>Admin: 
     GameSvc->>EventSvc: event.reward-request.process
     EventSvc-->>EventSvc: APPROVED -> PROCESSING
     Note over EventSvc: PROCESSING 처리 실패 시, 지급 불가
@@ -223,7 +223,7 @@ await firstValueFrom(this.gameClient.send(reward.cmd, {
 ```
 
 - PENDING 중인 보상 요청에 동시 접근하여 APPROVE 시 중복 지급이 발생할 수 있습니다.
-- findOneAndUpdate로 조회와 업데이트를 원자적으로 수행하여 위 문제를 해결하였습니다.
+- findOneAndUpdate로 조회와 업데이트를 원자적으로 수행하여 위 문제를 방지하였습니다.
 - 뒤에 오는 exists 체크를 한 세션(트랜잭션)에서 수행하지 않은 이유는, 일관성 보장의 목적이 아니기 때문입니다.
   - UX를 위해 추가한 로직으로 트랜잭션 사용이 과할 수 있다 판단하였습니다.
   - 다른 로직 모두 같은 기조로 작성하였습니다.
