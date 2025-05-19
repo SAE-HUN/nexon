@@ -3,7 +3,12 @@ jest.setTimeout(30000);
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestMicroservice, ValidationPipe } from '@nestjs/common';
 import { EventModule } from './../src/event.module';
-import { ClientProxy, ClientProxyFactory, RpcException, Transport } from '@nestjs/microservices';
+import {
+  ClientProxy,
+  ClientProxyFactory,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
@@ -38,13 +43,15 @@ describe('Event Microservice (e2e)', () => {
       options: { host: '127.0.0.1', port: 4002 },
       logger: false,
     });
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) => {
-        return new RpcException({ message: errors });
-      },
-    }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => {
+          return new RpcException({ message: errors });
+        },
+      }),
+    );
     app.useGlobalFilters(new RpcExceptionFilter());
     await app.listen();
 
@@ -63,7 +70,9 @@ describe('Event Microservice (e2e)', () => {
     rewardRequestModel = app.get(getModelToken(RewardRequest.name));
 
     realDateNow = Date.now;
-    jest.spyOn(global.Date, 'now').mockImplementation(() => new Date('2024-01-01T12:00:00.000Z').getTime());
+    jest
+      .spyOn(global.Date, 'now')
+      .mockImplementation(() => new Date('2024-01-01T12:00:00.000Z').getTime());
   });
 
   beforeEach(async () => {
@@ -93,16 +102,23 @@ describe('Event Microservice (e2e)', () => {
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-01-31T23:59:59.999Z',
       isActive: true,
-      condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+      condition: {
+        op: '>=',
+        cmd: 'get_login_days',
+        field: 'loginDays',
+        value: 7,
+      },
     };
-    const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
+    const eventRes: any = await firstValueFrom(
+      client.send({ cmd: 'event.event.create' }, eventDto),
+    );
     const eventId = eventRes._id;
 
     const rewardData = {
       name: 'Test Reward',
       description: 'Reward Description',
       cmd: 'give_item',
-      type: 'item'
+      type: 'item',
     };
     const reward = await rewardModel.create(rewardData);
     const rewardId = reward._id.toString();
@@ -110,16 +126,26 @@ describe('Event Microservice (e2e)', () => {
     return { eventId, rewardId };
   }
 
-  async function createTestEventRewardAndUser(rewardType: string = "item", rewardName: string = "RewardRequest Reward") {
+  async function createTestEventRewardAndUser(
+    rewardType: string = 'item',
+    rewardName: string = 'RewardRequest Reward',
+  ) {
     const eventDto = {
       title: 'RewardRequest Event',
       description: 'Event for reward request',
       startedAt: '2024-01-01T00:00:00.000Z',
       endedAt: '2024-01-31T23:59:59.999Z',
       isActive: true,
-      condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+      condition: {
+        op: '>=',
+        cmd: 'get_login_days',
+        field: 'loginDays',
+        value: 7,
+      },
     };
-    const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
+    const eventRes: any = await firstValueFrom(
+      client.send({ cmd: 'event.event.create' }, eventDto),
+    );
     const eventId = eventRes._id;
 
     const rewardData = {
@@ -132,7 +158,9 @@ describe('Event Microservice (e2e)', () => {
     const rewardId = reward._id.toString();
 
     const eventRewardDto = { eventId, rewardId, qty: 1 };
-    const eventRewardRes: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
+    const eventRewardRes: any = await firstValueFrom(
+      client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+    );
     const eventRewardId = eventRewardRes._id;
 
     const userId = '000000000000000000000001'; // 테스트용 임의 ObjectId
@@ -148,9 +176,16 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const response: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const response: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       expect(response).toHaveProperty('_id');
       expect(response.title).toBe(createEventDto.title);
     });
@@ -162,11 +197,20 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const listEventQuery = { sortBy: 'startedAt', sortOrder: 'desc' };
-      const response: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
+      const response: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQuery),
+      );
       expect(response).toHaveProperty('data');
       expect(response.data.length).toBeGreaterThan(0);
     });
@@ -178,7 +222,12 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
       const createEventDto2 = {
         title: 'Inactive Event',
@@ -186,17 +235,28 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-03T00:00:00.000Z',
         endedAt: '2024-01-04T00:00:00.000Z',
         isActive: false,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto1));
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto2));
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto1),
+      );
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto2),
+      );
 
       const listEventQueryTrue = {
         isActive: true,
         sortBy: 'startedAt',
         sortOrder: 'desc',
       };
-      const resTrue: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQueryTrue));
+      const resTrue: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQueryTrue),
+      );
       expect(resTrue).toHaveProperty('data');
       expect(resTrue.data.length).toBe(1);
       expect(resTrue.data[0].isActive).toBe(true);
@@ -206,7 +266,9 @@ describe('Event Microservice (e2e)', () => {
         sortBy: 'startedAt',
         sortOrder: 'desc',
       };
-      const resFalse: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQueryFalse));
+      const resFalse: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQueryFalse),
+      );
       expect(resFalse).toHaveProperty('data');
       expect(resFalse.data.length).toBe(1);
       expect(resFalse.data[0].isActive).toBe(false);
@@ -219,7 +281,12 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
       const createEventDtoOutRange = {
         title: 'Out Range',
@@ -227,10 +294,19 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-02-01T00:00:00.000Z',
         endedAt: '2024-02-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoInRange));
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoOutRange));
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDtoInRange),
+      );
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDtoOutRange),
+      );
 
       const listEventQuery = {
         startedAt: '2024-01-01T00:00:00.000Z',
@@ -238,7 +314,9 @@ describe('Event Microservice (e2e)', () => {
         sortBy: 'startedAt',
         sortOrder: 'asc',
       };
-      const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
+      const res: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQuery),
+      );
       expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(1);
       expect(res.data[0].title).toBe('In Range');
@@ -251,7 +329,12 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
       const createEventDtoLate = {
         title: 'Late',
@@ -259,19 +342,32 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-02-01T00:00:00.000Z',
         endedAt: '2024-02-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoEarly));
-      await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDtoLate));
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDtoEarly),
+      );
+      await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDtoLate),
+      );
 
       const listEventQuery = {
         sortBy: 'startedAt',
         sortOrder: 'asc',
       };
-      const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
+      const res: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQuery),
+      );
       expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(2);
-      expect(new Date(res.data[0].startedAt).getTime()).toBeLessThan(new Date(res.data[1].startedAt).getTime());
+      expect(new Date(res.data[0].startedAt).getTime()).toBeLessThan(
+        new Date(res.data[1].startedAt).getTime(),
+      );
     });
 
     it('should paginate', async () => {
@@ -281,19 +377,28 @@ describe('Event Microservice (e2e)', () => {
         startedAt: `2024-01-${(i + 1).toString().padStart(2, '0')}T00:00:00.000Z`,
         endedAt: `2024-01-${(i + 2).toString().padStart(2, '0')}T00:00:00.000Z`,
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       }));
       for (const createEventDto of events) {
-        await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+        await firstValueFrom(
+          client.send({ cmd: 'event.event.create' }, createEventDto),
+        );
       }
-      
+
       const listEventQuery = {
         page: 2,
         pageSize: 10,
         sortBy: 'startedAt',
         sortOrder: 'asc',
       };
-      const res: any = await firstValueFrom(client.send({ cmd: 'event.event.list' }, listEventQuery));
+      const res: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.list' }, listEventQuery),
+      );
       expect(res).toHaveProperty('page');
       expect(res.page).toBe(2);
       expect(res).toHaveProperty('pageSize');
@@ -302,7 +407,7 @@ describe('Event Microservice (e2e)', () => {
       expect(res.total).toBe(25);
       expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(10);
-      
+
       expect(res.data[0].title).toBe('Event 11');
       expect(res.data[9].title).toBe('Event 20');
     });
@@ -314,18 +419,29 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = createRes._id;
-      const response: any = await firstValueFrom(client.send({ cmd: 'event.event.get' }, eventId));
+      const response: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.get' }, eventId),
+      );
       expect(response).toHaveProperty('_id');
       expect(response._id).toBe(eventId);
     });
 
     it('should fail if not found', async () => {
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.event.get' }, '000000000000000000000000'))
+        firstValueFrom(
+          client.send({ cmd: 'event.event.get' }, '000000000000000000000000'),
+        ),
       ).rejects.toMatchObject({ message: 'Event not found' });
     });
 
@@ -336,10 +452,12 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', value: 7 }
+        condition: { op: '>=', cmd: 'get_login_days', value: 7 },
       };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.event.create' }, createEventDto),
+        ),
       ).rejects.toMatchObject({ message: 'Invalid condition structure' });
     });
 
@@ -353,21 +471,48 @@ describe('Event Microservice (e2e)', () => {
         condition: {
           op: 'AND',
           children: [
-            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 },
-            { op: '>=', cmd: 'get_referral', field: 'referral', value: 7 },
+            {
+              op: '>=',
+              cmd: 'get_login_days',
+              field: 'loginDays',
+              value: 7,
+            },
+            {
+              op: '>=',
+              cmd: 'get_referral',
+              field: 'referral',
+              value: 7,
+            },
             {
               op: 'OR',
               children: [
-                { op: '>=', cmd: 'get_purchase', field: 'purchase', value: 7 },
-                { op: '>=', cmd: 'get_score', field: 'score', value: 7 },
-              ]
-            }
-          ]
-        }
+                {
+                  op: '>=',
+                  cmd: 'get_purchase',
+                  field: 'purchase',
+                  value: 7,
+                },
+                {
+                  op: '>=',
+                  cmd: 'get_score',
+                  field: 'score',
+                  value: 7,
+                },
+              ],
+            },
+          ],
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(true);
     });
 
@@ -381,14 +526,31 @@ describe('Event Microservice (e2e)', () => {
         condition: {
           op: 'AND',
           children: [
-            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 },
-            { op: '>=', cmd: 'get_referral', field: 'referral', value: 8 } // 7 >= 8 false
-          ]
-        }
+            {
+              op: '>=',
+              cmd: 'get_login_days',
+              field: 'loginDays',
+              value: 7,
+            },
+            {
+              op: '>=',
+              cmd: 'get_referral',
+              field: 'referral',
+              value: 8,
+            }, // 7 >= 8 false
+          ],
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(false);
     });
 
@@ -402,14 +564,31 @@ describe('Event Microservice (e2e)', () => {
         condition: {
           op: 'OR',
           children: [
-            { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 8 }, // 7 >= 8 false
-            { op: '>=', cmd: 'get_referral', field: 'referral', value: 7 } // 7 >= 7 true
-          ]
-        }
+            {
+              op: '>=',
+              cmd: 'get_login_days',
+              field: 'loginDays',
+              value: 8,
+            }, // 7 >= 8 false
+            {
+              op: '>=',
+              cmd: 'get_referral',
+              field: 'referral',
+              value: 7,
+            }, // 7 >= 7 true
+          ],
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(true);
     });
 
@@ -420,13 +599,27 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2099-01-02T00:00:00.000Z',
         isActive: false,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(false);
-      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
+      expect(checkRes.detail.reason).toBe(
+        'Event is not active or not in progress',
+      );
     });
 
     it('should fail if event is not in progress (before start)', async () => {
@@ -437,13 +630,27 @@ describe('Event Microservice (e2e)', () => {
         startedAt: future,
         endedAt: '2099-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(false);
-      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
+      expect(checkRes.detail.reason).toBe(
+        'Event is not active or not in progress',
+      );
     });
 
     it('should fail if event is not in progress (after end)', async () => {
@@ -456,13 +663,27 @@ describe('Event Microservice (e2e)', () => {
         startedAt: past,
         endedAt: yesterday,
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, createEventDto),
+      );
       const eventId = eventRes._id;
-      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      const checkRes: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event.check-condition' },
+          { eventId, userId: 'u1' },
+        ),
+      );
       expect(checkRes.success).toBe(false);
-      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
+      expect(checkRes.detail.reason).toBe(
+        'Event is not active or not in progress',
+      );
     });
   });
 
@@ -474,9 +695,11 @@ describe('Event Microservice (e2e)', () => {
       const eventRewardDto = {
         eventId,
         rewardId,
-        qty: 5
+        qty: 5,
       };
-      const linkRes: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
+      const linkRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+      );
       expect(linkRes).toHaveProperty('event');
       expect(linkRes.event).toBe(eventId);
       expect(linkRes).toHaveProperty('reward');
@@ -491,24 +714,37 @@ describe('Event Microservice (e2e)', () => {
       const eventRewardDto = {
         eventId,
         rewardId,
-        qty: 5
+        qty: 5,
       };
-      await firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto));
+      await firstValueFrom(
+        client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+      );
 
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto))
-      ).rejects.toMatchObject({ message: 'This reward is already linked to the event.' });
+        firstValueFrom(
+          client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+        ),
+      ).rejects.toMatchObject({
+        message: 'This reward is already linked to the event.',
+      });
     });
 
     it('should fail if event does not exist', async () => {
-      const reward = await rewardModel.create({ name: 'R', description: 'D', cmd: 'cmd', type: 'item' });
+      const reward = await rewardModel.create({
+        name: 'R',
+        description: 'D',
+        cmd: 'cmd',
+        type: 'item',
+      });
       const eventRewardDto = {
         eventId: '000000000000000000000000',
         rewardId: reward._id.toString(),
-        qty: 1
+        qty: 1,
       };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+        ),
       ).rejects.toMatchObject({ message: 'Event does not exist.' });
     });
 
@@ -519,17 +755,26 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-02T00:00:00.000Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, eventDto),
+      );
       const eventId = eventRes._id;
       const eventRewardDto = {
         eventId,
         rewardId: '000000000000000000000000',
-        qty: 1
+        qty: 1,
       };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.event-reward.create' }, eventRewardDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.event-reward.create' }, eventRewardDto),
+        ),
       ).rejects.toMatchObject({ message: 'Reward does not exist.' });
     });
 
@@ -540,40 +785,74 @@ describe('Event Microservice (e2e)', () => {
         startedAt: '2024-01-01T00:00:00.000Z',
         endedAt: '2024-01-31T23:59:59.999Z',
         isActive: true,
-        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+        condition: {
+          op: '>=',
+          cmd: 'get_login_days',
+          field: 'loginDays',
+          value: 7,
+        },
       };
-      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, eventDto));
+      const eventRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.event.create' }, eventDto),
+      );
       const event = eventRes._id;
 
-      const rewards = await Promise.all(Array.from({ length: 8 }).map((_, i) => rewardModel.create({
-        name: `ER${i + 1}`,
-        description: 'desc',
-        cmd: 'give',
-        type: 'item',
-      })));
+      const rewards = await Promise.all(
+        Array.from({ length: 8 }).map((_, i) =>
+          rewardModel.create({
+            name: `ER${i + 1}`,
+            description: 'desc',
+            cmd: 'give',
+            type: 'item',
+          }),
+        ),
+      );
       for (let i = 0; i < rewards.length; i++) {
-        await firstValueFrom(client.send({
-          cmd: 'event.event-reward.create'
-        }, {
-          eventId: event,
-          rewardId: rewards[i]._id,
-          qty: i + 1
-        }));
+        await firstValueFrom(
+          client.send(
+            {
+              cmd: 'event.event-reward.create',
+            },
+            {
+              eventId: event,
+              rewardId: rewards[i]._id,
+              qty: i + 1,
+            },
+          ),
+        );
       }
-      const resAll: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, {}));
+      const resAll: any = await firstValueFrom(
+        client.send({ cmd: 'event.event-reward.list' }, {}),
+      );
       expect(resAll).toHaveProperty('data');
       expect(resAll.data.length).toBe(8);
 
-      const resPage: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { page: 2, pageSize: 3 }));
+      const resPage: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event-reward.list' },
+          { page: 2, pageSize: 3 },
+        ),
+      );
       expect(resPage).toHaveProperty('page');
       expect(resPage.page).toBe(2);
       expect(resPage).toHaveProperty('pageSize');
       expect(resPage.pageSize).toBe(3);
       expect(resPage.data.length).toBe(3);
 
-      const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.event-reward.list' }, { eventId: event.toString() }));
+      const resFilter: any = await firstValueFrom(
+        client.send(
+          { cmd: 'event.event-reward.list' },
+          { eventId: event.toString() },
+        ),
+      );
       expect(resFilter).toHaveProperty('data');
-      expect(resFilter.data.every((er: any) => er.event.toString() === event.toString() || er.event._id?.toString() === event.toString())).toBe(true);
+      expect(
+        resFilter.data.every(
+          (er: any) =>
+            er.event.toString() === event.toString() ||
+            er.event._id?.toString() === event.toString(),
+        ),
+      ).toBe(true);
     });
   });
 
@@ -590,24 +869,32 @@ describe('Event Microservice (e2e)', () => {
       for (const reward of rewards) {
         await rewardModel.create(reward);
       }
-      
-      const resAll: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, {}));
+
+      const resAll: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward.list' }, {}),
+      );
       expect(resAll).toHaveProperty('data');
       expect(resAll.data.length).toBe(15);
-      
-      const resPage: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { page: 2, pageSize: 5 }));
+
+      const resPage: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward.list' }, { page: 2, pageSize: 5 }),
+      );
       expect(resPage).toHaveProperty('data');
       expect(resPage.data.length).toBe(5);
       expect(resPage.page).toBe(2);
       expect(resPage).toHaveProperty('pageSize');
       expect(resPage.pageSize).toBe(5);
       expect(resPage.data.length).toBe(5);
-      
-      const resFilter: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { type: 'item' }));
+
+      const resFilter: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward.list' }, { type: 'item' }),
+      );
       expect(resFilter).toHaveProperty('data');
       expect(resFilter.data.every((r: any) => r.type === 'item')).toBe(true);
 
-      const resSort: any = await firstValueFrom(client.send({ cmd: 'event.reward.list' }, { sortOrder: 'asc' }));
+      const resSort: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward.list' }, { sortOrder: 'asc' }),
+      );
       expect(resSort).toHaveProperty('data');
       expect(resSort.data[0].name).toBe('Reward 1');
     });
@@ -618,7 +905,9 @@ describe('Event Microservice (e2e)', () => {
     it('should create', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const dto = { eventRewardId, userId };
-      const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
+      const res: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, dto),
+      );
       expect(res).toHaveProperty('eventReward');
       expect(res.eventReward).toBe(eventRewardId);
       expect(res).toHaveProperty('userId');
@@ -628,9 +917,13 @@ describe('Event Microservice (e2e)', () => {
     it('should prevent duplicate', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const dto = { eventRewardId, userId };
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, dto),
+      );
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto))
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.create' }, dto),
+        ),
       ).rejects.toMatchObject({ message: 'Duplicate reward request' });
     });
 
@@ -638,16 +931,22 @@ describe('Event Microservice (e2e)', () => {
       const userId = '000000000000000000000000';
       const dto = { eventRewardId: '000000000000000000000000', userId };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto))
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.create' }, dto),
+        ),
       ).rejects.toMatchObject({ message: 'EventReward not found' });
     });
 
     it('should list by userId', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const dto = { eventRewardId, userId };
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, dto));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, dto),
+      );
       const query = { userId };
-      const res: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, query));
+      const res: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.list' }, query),
+      );
       expect(res).toHaveProperty('data');
       expect(res.data.length).toBe(1);
       expect(res.data[0].userId).toBe(userId);
@@ -663,11 +962,15 @@ describe('Event Microservice (e2e)', () => {
     it('should reject pending', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
 
       const rejectDto = { rewardRequestId, reason: '조건 미달' };
-      const rejectRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto));
+      const rejectRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.reject' }, rejectDto),
+      );
       expect(rejectRes).toHaveProperty('status');
       expect(rejectRes.status).toBe('REJECTED');
       expect(rejectRes).toHaveProperty('reason');
@@ -678,30 +981,50 @@ describe('Event Microservice (e2e)', () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
 
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, { rewardRequestId, reason: '이미 거절됨' }));
+      await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.reject' },
+          { rewardRequestId, reason: '이미 거절됨' },
+        ),
+      );
       const rejectDto = { rewardRequestId, reason: '이미 거절됨' };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto))
-      ).rejects.toMatchObject({ message: 'Only PENDING requests can be rejected' });
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.reject' }, rejectDto),
+        ),
+      ).rejects.toMatchObject({
+        message: 'Only PENDING requests can be rejected',
+      });
       const updated = await rewardRequestModel.findById(rewardRequestId);
       expect(updated.status).toBe('REJECTED');
     });
 
     it('should fail to reject non-existent', async () => {
-      const rejectDto = { rewardRequestId: '000000000000000000000000', reason: '존재하지 않음' };
+      const rejectDto = {
+        rewardRequestId: '000000000000000000000000',
+        reason: '존재하지 않음',
+      };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.reject' }, rejectDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.reject' }, rejectDto),
+        ),
       ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should approve pending', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      const approveRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
+      const approveRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
       expect(approveRes).toHaveProperty('status');
       expect(approveRes.status).toBe('APPROVED');
       const updated = await rewardRequestModel.findById(rewardRequestId);
@@ -710,30 +1033,49 @@ describe('Event Microservice (e2e)', () => {
 
     it('should fail to approve non-existent', async () => {
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, '000000000000000000000000'))
+        firstValueFrom(
+          client.send(
+            { cmd: 'event.reward-request.approve' },
+            '000000000000000000000000',
+          ),
+        ),
       ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should fail to approve non-pending', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId))
-      ).rejects.toMatchObject({ message: 'Only PENDING requests can be approved' });
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+        ),
+      ).rejects.toMatchObject({
+        message: 'Only PENDING requests can be approved',
+      });
     });
-    
+
     it('should process approved to processing', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
 
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
 
-      const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+      const processRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.process' }, rewardRequestId),
+      );
       expect(processRes).toHaveProperty('status');
       expect(processRes.status).toBe('PROCESSING');
     });
@@ -741,31 +1083,50 @@ describe('Event Microservice (e2e)', () => {
     it('should fail to process non-approved', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      
+
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId))
-      ).rejects.toMatchObject({ message: 'Only APPROVED requests can be processed' });
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.process' }, rewardRequestId),
+        ),
+      ).rejects.toMatchObject({
+        message: 'Only APPROVED requests can be processed',
+      });
     });
 
     it('should fail to process non-existent', async () => {
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, '000000000000000000000000'))
+        firstValueFrom(
+          client.send(
+            { cmd: 'event.reward-request.process' },
+            '000000000000000000000000',
+          ),
+        ),
       ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should update to SUCCESS via result', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
-      const processRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
+      const processRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.process' }, rewardRequestId),
+      );
       expect(processRes).toHaveProperty('status');
       expect(processRes.status).toBe('PROCESSING');
       const resultDto = { rewardRequestId, status: 'SUCCESS' };
-      const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
+      const resultRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.result' }, resultDto),
+      );
       expect(resultRes).toHaveProperty('status');
       expect(resultRes.status).toBe('SUCCESS');
       const updated = await rewardRequestModel.findById(rewardRequestId);
@@ -775,12 +1136,24 @@ describe('Event Microservice (e2e)', () => {
     it('should update to FAILED via result', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
-      const resultDto = { rewardRequestId, status: 'FAILED', reason: '지급 실패' };
-      const resultRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.process' }, rewardRequestId),
+      );
+      const resultDto = {
+        rewardRequestId,
+        status: 'FAILED',
+        reason: '지급 실패',
+      };
+      const resultRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.result' }, resultDto),
+      );
       expect(resultRes).toHaveProperty('status');
       expect(resultRes.status).toBe('FAILED');
       expect(resultRes).toHaveProperty('reason');
@@ -793,54 +1166,124 @@ describe('Event Microservice (e2e)', () => {
     it('should fail result on non-processing', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
       // 상태를 PENDING으로 둔 채 result 호출
       const resultDto = { rewardRequestId, status: 'SUCCESS' };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
-      ).rejects.toMatchObject({ message: 'Only PROCESSING requests can be updated' });
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.result' }, resultDto),
+        ),
+      ).rejects.toMatchObject({
+        message: 'Only PROCESSING requests can be updated',
+      });
     });
 
     it('should fail result on non-existent', async () => {
-      const resultDto = { rewardRequestId: '000000000000000000000000', status: 'SUCCESS' };
+      const resultDto = {
+        rewardRequestId: '000000000000000000000000',
+        status: 'SUCCESS',
+      };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.result' }, resultDto),
+        ),
       ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should fail result on invalid status', async () => {
       const { eventRewardId, userId } = await createTestEventRewardAndUser();
       const createDto = { eventRewardId, userId };
-      const createRes: any = await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, createDto));
+      const createRes: any = await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.create' }, createDto),
+      );
       const rewardRequestId = createRes._id;
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId));
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.process' }, rewardRequestId));
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.approve' }, rewardRequestId),
+      );
+      await firstValueFrom(
+        client.send({ cmd: 'event.reward-request.process' }, rewardRequestId),
+      );
       const resultDto = { rewardRequestId, status: 'INVALID' };
       await expect(
-        firstValueFrom(client.send({ cmd: 'event.reward-request.result' }, resultDto))
+        firstValueFrom(
+          client.send({ cmd: 'event.reward-request.result' }, resultDto),
+        ),
       ).rejects.toMatchObject(expect.anything());
     });
 
     it('should list by eventId, rewardId, userId, status', async () => {
-      const { eventId, eventRewardId } = await createTestEventRewardAndUser("item", "RewardRequest Reward");
-      const userId = "000000000000000000000000";
-      const { eventId: eventId2, rewardId: rewardId2, eventRewardId: eventRewardId2 } = await createTestEventRewardAndUser("item", "RewardRequest Reward2");
-      const userId2 = "000000000000000000000001";
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId, userId }));
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId: eventRewardId2, userId: userId2 }));
-      await firstValueFrom(client.send({ cmd: 'event.reward-request.create' }, { eventRewardId: eventRewardId2, userId }));
+      const { eventId, eventRewardId } = await createTestEventRewardAndUser(
+        'item',
+        'RewardRequest Reward',
+      );
+      const userId = '000000000000000000000000';
+      const {
+        eventId: eventId2,
+        rewardId: rewardId2,
+        eventRewardId: eventRewardId2,
+      } = await createTestEventRewardAndUser('item', 'RewardRequest Reward2');
+      const userId2 = '000000000000000000000001';
+      await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.create' },
+          { eventRewardId, userId },
+        ),
+      );
+      await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.create' },
+          { eventRewardId: eventRewardId2, userId: userId2 },
+        ),
+      );
+      await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.create' },
+          { eventRewardId: eventRewardId2, userId },
+        ),
+      );
 
-      let res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId, userId, status: 'PENDING' }));
+      let res = await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.list' },
+          { eventId, userId, status: 'PENDING' },
+        ),
+      );
       expect(res.data.length).toBe(1);
       expect(res.data[0].userId).toBe(userId);
-      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { rewardId: rewardId2, userId, status: 'PENDING' }));
+      res = await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.list' },
+          { rewardId: rewardId2, userId, status: 'PENDING' },
+        ),
+      );
       expect(res.data.length).toBe(1);
       expect(res.data[0].userId).toBe(userId);
-      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId: eventId2, rewardId: rewardId2, userId, status: 'PENDING' }));
+      res = await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.list' },
+          {
+            eventId: eventId2,
+            rewardId: rewardId2,
+            userId,
+            status: 'PENDING',
+          },
+        ),
+      );
       expect(res.data.length).toBe(1);
       expect(res.data[0].userId).toBe(userId);
-      res = await firstValueFrom(client.send({ cmd: 'event.reward-request.list' }, { eventId: '000000000000000000000000', userId, status: 'PENDING' }));
+      res = await firstValueFrom(
+        client.send(
+          { cmd: 'event.reward-request.list' },
+          {
+            eventId: '000000000000000000000000',
+            userId,
+            status: 'PENDING',
+          },
+        ),
+      );
       expect(res.data.length).toBe(0);
     });
   });

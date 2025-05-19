@@ -22,7 +22,9 @@ export class RewardRequestController {
 
   @MessagePattern({ cmd: 'event.reward-request.approve' })
   async approveRewardRequest(@Payload() rewardRequestId: string) {
-    return await this.rewardRequestService.approveRewardRequest(rewardRequestId);
+    return await this.rewardRequestService.approveRewardRequest(
+      rewardRequestId,
+    );
   }
 
   @MessagePattern({ cmd: 'event.reward-request.reject' })
@@ -32,11 +34,13 @@ export class RewardRequestController {
 
   @MessagePattern({ cmd: 'event.reward-request.process' })
   async processRewardRequest(@Payload() rewardRequestId: string) {
-    return await this.rewardRequestService.processRewardRequest(rewardRequestId);
+    return await this.rewardRequestService.processRewardRequest(
+      rewardRequestId,
+    );
   }
 
   @MessagePattern({ cmd: 'event.reward-request.result' })
   async handleRewardRequestResult(@Payload() dto: ResultRewardRequestDto) {
     return await this.rewardRequestService.handleRewardRequestResult(dto);
   }
-} 
+}

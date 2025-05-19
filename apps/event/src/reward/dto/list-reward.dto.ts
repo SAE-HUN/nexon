@@ -22,4 +22,4 @@ export class ListRewardQuery {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: string = 'desc';
-} 
+}

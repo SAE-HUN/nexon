@@ -10,4 +10,4 @@ export class RejectRewardRequestDto {
   @IsString()
   @IsNotEmpty()
   reason: string;
-} 
+}

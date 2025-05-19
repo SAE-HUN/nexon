@@ -10,7 +10,13 @@ export class RewardRepository {
     private readonly rewardModel: Model<RewardDocument>,
   ) {}
 
-  async find(query: any, sortBy: string, sortOrder: 1 | -1, skip: number, limit: number): Promise<Reward[]> {
+  async find(
+    query: any,
+    sortBy: string,
+    sortOrder: 1 | -1,
+    skip: number,
+    limit: number,
+  ): Promise<Reward[]> {
     return this.rewardModel
       .find(query)
       .sort({ [sortBy]: sortOrder } as any)
@@ -35,4 +41,4 @@ export class RewardRepository {
   async exists(filter: any): Promise<boolean> {
     return !!(await this.rewardModel.exists(filter));
   }
-} 
+}

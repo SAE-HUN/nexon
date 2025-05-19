@@ -11,4 +11,4 @@ export class UserAction {
 }
 
 export type UserActionDocument = UserAction & Document;
-export const UserActionSchema = SchemaFactory.createForClass(UserAction); 
+export const UserActionSchema = SchemaFactory.createForClass(UserAction);

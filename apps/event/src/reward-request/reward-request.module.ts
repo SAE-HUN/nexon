@@ -3,7 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RewardRequestController } from './reward-request.controller';
 import { RewardRequestService } from './reward-request.service';
 import { RewardRequestRepository } from './reward-request.repository';
-import { RewardRequest, RewardRequestSchema } from './schema/reward-request.schema';
+import {
+  RewardRequest,
+  RewardRequestSchema,
+} from './schema/reward-request.schema';
 import { EventRewardModule } from '../event-reward/event-reward.module';
 import { EventRewardSchema } from '../event-reward/schema/event-reward.schema';
 import { EventReward } from '../event-reward/schema/event-reward.schema';
@@ -23,7 +26,12 @@ import { EventModule } from '../event/event.module';
     SharedModule,
   ],
   controllers: [RewardRequestController],
-  providers: [RewardRequestService, RewardRequestRepository, EventRewardRepository, EventService],
+  providers: [
+    RewardRequestService,
+    RewardRequestRepository,
+    EventRewardRepository,
+    EventService,
+  ],
   exports: [RewardRequestService, RewardRequestRepository],
 })
-export class RewardRequestModule {} 
+export class RewardRequestModule {}

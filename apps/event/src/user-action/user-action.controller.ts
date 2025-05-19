@@ -16,4 +16,4 @@ export class UserActionController {
   async list() {
     return this.userActionService.findAll();
   }
-} 
+}

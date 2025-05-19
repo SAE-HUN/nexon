@@ -35,4 +35,4 @@ export interface Condition {
   value?: number;
 }
 
-export const EventSchema = SchemaFactory.createForClass(Event); 
+export const EventSchema = SchemaFactory.createForClass(Event);

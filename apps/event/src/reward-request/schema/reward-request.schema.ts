@@ -4,12 +4,12 @@ import { EventRewardDocument } from '../../event-reward/schema/event-reward.sche
 import { EventReward } from '../../event-reward/schema/event-reward.schema';
 
 export enum RewardRequestStatus {
-    PENDING = 'PENDING',
-    APPROVED = 'APPROVED',
-    REJECTED = 'REJECTED',
-    PROCESSING = 'PROCESSING',
-    SUCCESS = 'SUCCESS',
-    FAILED = 'FAILED',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  PROCESSING = 'PROCESSING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
 }
 
 export type RewardRequestDocument = RewardRequest & Document;
@@ -21,8 +21,8 @@ export class RewardRequest {
     ref: EventReward.name,
     required: true,
   })
-  eventReward: EventRewardDocument; 
-  
+  eventReward: EventRewardDocument;
+
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
   userId: string;
 
@@ -39,6 +39,6 @@ export class RewardRequest {
 }
 
 export const RewardRequestSchema = SchemaFactory.createForClass(RewardRequest);
-RewardRequestSchema.index({ eventReward: 1, userId: 1 }, { unique: true }); 
+RewardRequestSchema.index({ eventReward: 1, userId: 1 }, { unique: true });
 RewardRequestSchema.index({ eventReward: 1 });
 RewardRequestSchema.index({ userId: 1 });

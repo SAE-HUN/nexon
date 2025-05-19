@@ -21,4 +21,4 @@ export class CreateEventDto {
   @IsObject()
   @Type(() => Object)
   condition: Condition;
-} 
+}

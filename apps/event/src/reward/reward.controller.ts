@@ -17,4 +17,4 @@ export class RewardController {
   async createReward(@Payload() dto: CreateRewardDto) {
     return await this.rewardService.createReward(dto);
   }
-} 
+}

@@ -9,4 +9,4 @@ export class CreateRewardDto {
 
   @IsString()
   cmd: string = 'game.reward.process';
-} 
+}

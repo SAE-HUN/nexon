@@ -1,4 +1,12 @@
-import { IsOptional, IsBoolean, IsDateString, IsIn, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsBoolean,
+  IsDateString,
+  IsIn,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ListEventQuery {
@@ -34,4 +42,4 @@ export class ListEventQuery {
   @Min(1)
   @Max(100)
   pageSize?: number = 20;
-} 
+}

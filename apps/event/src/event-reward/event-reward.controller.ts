@@ -17,4 +17,4 @@ export class EventRewardController {
   async listEventRewards(@Payload() query: ListEventRewardQuery) {
     return await this.eventRewardService.listEventRewards(query);
   }
-} 
+}

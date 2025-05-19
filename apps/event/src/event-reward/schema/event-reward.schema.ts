@@ -21,11 +21,11 @@ export class EventReward {
     ref: Reward.name,
     required: true,
   })
-  reward: RewardDocument; 
-  
+  reward: RewardDocument;
+
   @Prop({ required: true })
   qty: number;
 }
 
 export const EventRewardSchema = SchemaFactory.createForClass(EventReward);
-EventRewardSchema.index({ event: 1, reward: 1 }, { unique: true }); 
+EventRewardSchema.index({ event: 1, reward: 1 }, { unique: true });

@@ -8,7 +8,10 @@ export class RpcExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     if (!(exception instanceof RpcException)) {
-      exception = new RpcException({ message: (exception as any).message || 'Internal server error', status: 500 });
+      exception = new RpcException({
+        message: (exception as any).message || 'Internal server error',
+        status: 500,
+      });
     }
 
     const args = host.getArgs();
@@ -25,4 +28,4 @@ export class RpcExceptionFilter implements ExceptionFilter {
 
     return throwError(() => (exception as any).error);
   }
-} 
+}

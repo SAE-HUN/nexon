@@ -13,4 +13,4 @@ export class UserActionService {
   async findAll() {
     return this.userActionRepository.findAll();
   }
-} 
+}

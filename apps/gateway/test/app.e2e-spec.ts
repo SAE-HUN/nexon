@@ -20,8 +20,14 @@ describe('GatewayController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     const configService = app.get(ConfigService);
-    adminToken = jwt.sign({ sub: 1, username: 'admin', role: 'ADMIN' }, configService.get<string>('JWT_SECRET', 'TEMP_SECRET'));
-    userToken = jwt.sign({ sub: 2, username: 'user', role: 'USER' }, configService.get<string>('JWT_SECRET', 'TEMP_SECRET'));
+    adminToken = jwt.sign(
+      { sub: 1, username: 'admin', role: 'ADMIN' },
+      configService.get<string>('JWT_SECRET', 'TEMP_SECRET'),
+    );
+    userToken = jwt.sign(
+      { sub: 2, username: 'user', role: 'USER' },
+      configService.get<string>('JWT_SECRET', 'TEMP_SECRET'),
+    );
     await app.init();
   });
 

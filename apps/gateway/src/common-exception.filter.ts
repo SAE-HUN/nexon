@@ -1,4 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 
 /**
@@ -13,13 +20,15 @@ export class CommonExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status = exception instanceof HttpException
-      ? exception.getStatus()
-      : (exception as any).status ||HttpStatus.INTERNAL_SERVER_ERROR;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : (exception as any).status || HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = exception instanceof HttpException
-      ? exception.getResponse()
-      : (exception as any).message || exception;
+    const message =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : (exception as any).message || exception;
 
     const log = {
       timestamp: new Date().toISOString(),
@@ -37,4 +46,4 @@ export class CommonExceptionFilter implements ExceptionFilter {
       error: message,
     });
   }
-} 
+}

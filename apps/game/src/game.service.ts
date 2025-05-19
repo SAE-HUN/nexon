@@ -12,10 +12,18 @@ export class GameService {
     return 'Hello World!';
   }
 
-  async sendCallback(callback: { cmd: string; payload: any }, result: { status: string; reason?: string }) {
+  async sendCallback(
+    callback: { cmd: string; payload: any },
+    result: { status: string; reason?: string },
+  ) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      await firstValueFrom(this.eventClient.send({ cmd: callback.cmd }, { ...callback.payload, ...result }));
+      await firstValueFrom(
+        this.eventClient.send(
+          { cmd: callback.cmd },
+          { ...callback.payload, ...result },
+        ),
+      );
     } catch (err) {
       console.log(err);
     }
@@ -33,7 +41,12 @@ export class GameService {
   }) {
     let processingResult: any;
     try {
-      processingResult = await firstValueFrom(this.eventClient.send({ cmd: data.processing.cmd}, data.processing.payload ));
+      processingResult = await firstValueFrom(
+        this.eventClient.send(
+          { cmd: data.processing.cmd },
+          data.processing.payload,
+        ),
+      );
     } catch (err) {
       const result = {
         status: 'FAILED',
@@ -48,17 +61,14 @@ export class GameService {
       ? { status: 'FAILED', reason: 'Miss' }
       : { status: 'SUCCESS' };
     this.sendCallback(data.callback, result);
-    
+
     return {
       status: 'PROCESSING',
       message: 'Reward processing started',
     };
   }
 
-  async getUserAction(data: {
-    userId: string;
-    field: string;
-  }) {
+  async getUserAction(data: { userId: string; field: string }) {
     return 7;
   }
 }

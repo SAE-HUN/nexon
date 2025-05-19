@@ -6,17 +6,10 @@ import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class RewardService {
-  constructor(
-    private readonly rewardRepository: RewardRepository,
-  ) {}
+  constructor(private readonly rewardRepository: RewardRepository) {}
 
   async listRewards(query: ListRewardQuery) {
-    const {
-      type,
-      sortOrder = 'desc',
-      page = 1,
-      pageSize = 20,
-    } = query;
+    const { type, sortOrder = 'desc', page = 1, pageSize = 20 } = query;
     const findQuery: any = {};
     if (type) findQuery.type = type;
     const sortBy = 'createdAt';
@@ -35,10 +28,13 @@ export class RewardService {
   }
 
   async createReward(dto: CreateRewardDto) {
-    const exist = await this.rewardRepository.exists({ type: dto.type, name: dto.name });
+    const exist = await this.rewardRepository.exists({
+      type: dto.type,
+      name: dto.name,
+    });
     if (exist) {
       throw new RpcException({ message: 'Duplicate reward', status: 400 });
     }
     return this.rewardRepository.create(dto);
   }
-} 
+}

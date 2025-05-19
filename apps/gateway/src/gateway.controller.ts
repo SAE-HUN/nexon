@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, UseGuards, Query, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  UseGuards,
+  Query,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { GatewayService } from './gateway.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from './roles.decorator';
@@ -30,10 +40,8 @@ interface AuthenticatedRequest extends ExpressRequest {
 @ApiBearerAuth()
 @Controller()
 export class GatewayController {
-  constructor(
-    private readonly gatewayService: GatewayService,
-  ) {}
-  
+  constructor(private readonly gatewayService: GatewayService) {}
+
   @Get()
   getHello(): string {
     return this.gatewayService.getHello();
@@ -58,7 +66,10 @@ export class GatewayController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
   async changeUserRole(@Body() changeUserRoleDto: ChangeUserRoleDto) {
-    return this.gatewayService.proxyToAuth('auth.user.change-role', changeUserRoleDto);
+    return this.gatewayService.proxyToAuth(
+      'auth.user.change-role',
+      changeUserRoleDto,
+    );
   }
 
   @Get('event/hello')
@@ -70,7 +81,10 @@ export class GatewayController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
   async createEvent(@Body() createEventDto: CreateEventDto) {
-    return this.gatewayService.proxyToEvent('event.event.create', createEventDto);
+    return this.gatewayService.proxyToEvent(
+      'event.event.create',
+      createEventDto,
+    );
   }
 
   @Get('event')
@@ -87,15 +101,24 @@ export class GatewayController {
 
   @Get('event/:eventId/check-condition')
   @UseGuards(AuthGuard('jwt'))
-  async checkEventCondition(@Param('eventId') eventId: string, @Query('userId') userId: string) {
-    return this.gatewayService.proxyToEvent('event.event.check-condition', { eventId, userId });
+  async checkEventCondition(
+    @Param('eventId') eventId: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.gatewayService.proxyToEvent('event.event.check-condition', {
+      eventId,
+      userId,
+    });
   }
 
   @Post('user-action')
   @UseGuards(AuthGuard('jwt'))
   @Roles('ADMIN', 'OPERATOR')
   async createUserAction(@Body() createUserActionDto: CreateUserActionDto) {
-    return this.gatewayService.proxyToEvent('event.user-action.create', createUserActionDto);
+    return this.gatewayService.proxyToEvent(
+      'event.user-action.create',
+      createUserActionDto,
+    );
   }
 
   @Get('user-action')
@@ -109,7 +132,10 @@ export class GatewayController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
   async createReward(@Body() createRewardDto: CreateRewardDto) {
-    return this.gatewayService.proxyToEvent('event.reward.create', createRewardDto);
+    return this.gatewayService.proxyToEvent(
+      'event.reward.create',
+      createRewardDto,
+    );
   }
 
   @Get('reward')
@@ -121,9 +147,7 @@ export class GatewayController {
   @Post('event-reward')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
-  async createEventReward(
-    @Body() dto: CreateEventRewardDto
-  ) {
+  async createEventReward(@Body() dto: CreateEventRewardDto) {
     return this.gatewayService.proxyToEvent('event.event-reward.create', dto);
   }
 
@@ -135,9 +159,15 @@ export class GatewayController {
 
   @Post('reward-request')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async createRewardRequest(@Body() dto: CreateRewardRequestDto, @Req() req: AuthenticatedRequest) {
+  async createRewardRequest(
+    @Body() dto: CreateRewardRequestDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     const user = req.user;
-    return this.gatewayService.proxyToEvent('event.reward-request.create', { ...dto, userId: user.userId });
+    return this.gatewayService.proxyToEvent('event.reward-request.create', {
+      ...dto,
+      userId: user.userId,
+    });
   }
 
   @Get('reward-request')
@@ -149,22 +179,39 @@ export class GatewayController {
 
   @Get('reward-request/my')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async listMyRewardRequests(@Query() query: ListRewardRequestQuery, @Req() req: AuthenticatedRequest) {
+  async listMyRewardRequests(
+    @Query() query: ListRewardRequestQuery,
+    @Req() req: AuthenticatedRequest,
+  ) {
     const user = req.user;
-    return this.gatewayService.proxyToEvent('event.reward-request.list', { ...query, userId: user.userId });
+    return this.gatewayService.proxyToEvent('event.reward-request.list', {
+      ...query,
+      userId: user.userId,
+    });
   }
 
   @Patch('reward-request/:rewardRequestId/reject')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'AUDITOR')
-  async rejectRewardRequest(@Param('rewardRequestId') rewardRequestId: string, @Body() dto: RejectRewardRequestDto) {
-    return this.gatewayService.proxyToEvent('event.reward-request.reject', { ...dto, rewardRequestId });
+  async rejectRewardRequest(
+    @Param('rewardRequestId') rewardRequestId: string,
+    @Body() dto: RejectRewardRequestDto,
+  ) {
+    return this.gatewayService.proxyToEvent('event.reward-request.reject', {
+      ...dto,
+      rewardRequestId,
+    });
   }
 
   @Patch('reward-request/:rewardRequestId/approve')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'AUDITOR')
-  async approveRewardRequest(@Param('rewardRequestId') rewardRequestId: string) {
-    return this.gatewayService.proxyToEvent('event.reward-request.approve', rewardRequestId);
+  async approveRewardRequest(
+    @Param('rewardRequestId') rewardRequestId: string,
+  ) {
+    return this.gatewayService.proxyToEvent(
+      'event.reward-request.approve',
+      rewardRequestId,
+    );
   }
 }

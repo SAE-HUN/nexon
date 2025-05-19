@@ -4,7 +4,7 @@ services:
     image: mongo:6.0
     container_name: nexon-mongodb
     ports:
-      - "27017:27017"
+      - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -23,7 +23,7 @@ services:
       - EVENT_HOST=event
       - EVENT_PORT=4002
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - auth
       - event
@@ -39,7 +39,7 @@ services:
       - JWT_SECRET=secret111
       - AUTH_MONGODB_URI=mongodb://root:example@mongodb:27017/auth?authSource=admin
     ports:
-      - "4001:4001"
+      - '4001:4001'
     depends_on:
       - mongodb
 
@@ -54,7 +54,7 @@ services:
       - GAME_HOST=game
       - GAME_PORT=4003
     ports:
-      - "4002:4002"
+      - '4002:4002'
     depends_on:
       - mongodb
 
@@ -68,7 +68,7 @@ services:
       - EVENT_HOST=event
       - EVENT_PORT=4002
     ports:
-      - "4003:4003"
+      - '4003:4003'
 
 volumes:
-  mongo_data: 
+  mongo_data:

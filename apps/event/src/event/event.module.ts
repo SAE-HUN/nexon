@@ -8,13 +8,11 @@ import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Event.name, schema: EventSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
     SharedModule,
   ],
   controllers: [EventController],
   providers: [EventService, EventRepository],
   exports: [EventService, EventRepository],
 })
-export class EventModule {} 
+export class EventModule {}

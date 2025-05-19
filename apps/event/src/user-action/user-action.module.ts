@@ -5,11 +5,14 @@ import { UserActionController } from './user-action.controller';
 import { UserActionService } from './user-action.service';
 import { UserActionRepository } from './user-action.repository';
 
-
 @Module({
-  imports: [MongooseModule.forFeature([{ name: UserAction.name, schema: UserActionSchema }])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: UserAction.name, schema: UserActionSchema },
+    ]),
+  ],
   controllers: [UserActionController],
   providers: [UserActionService, UserActionRepository],
   exports: [UserActionService],
 })
-export class UserActionModule {} 
+export class UserActionModule {}

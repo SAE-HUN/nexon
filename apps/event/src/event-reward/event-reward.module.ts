@@ -22,7 +22,12 @@ import { Reward, RewardSchema } from '../reward/schema/reward.schema';
     RewardModule,
   ],
   controllers: [EventRewardController],
-  providers: [EventRewardService, EventRewardRepository, EventRepository, RewardRepository],
+  providers: [
+    EventRewardService,
+    EventRewardRepository,
+    EventRepository,
+    RewardRepository,
+  ],
   exports: [EventRewardService, EventRewardRepository],
 })
-export class EventRewardModule {} 
+export class EventRewardModule {}

@@ -39,10 +39,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ]),
   ],
   controllers: [GatewayController],
-  providers: [
-    GatewayService,
-    JwtStrategy
-  ],
+  providers: [GatewayService, JwtStrategy],
 })
 export class GatewayModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

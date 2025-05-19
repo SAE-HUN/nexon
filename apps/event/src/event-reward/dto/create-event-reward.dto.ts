@@ -10,4 +10,4 @@ export class CreateEventRewardDto {
   @IsInt()
   @Min(1)
   qty: number;
-} 
+}

@@ -12,7 +12,7 @@ export class GatewayService {
   getHello(): string {
     return 'Hello World!';
   }
-  
+
   async proxyToAuth(cmd: string, data?: any): Promise<any> {
     return await firstValueFrom(this.authClient.send({ cmd }, data ?? {}));
   }

@@ -12,24 +12,24 @@ export class GameController {
   }
 
   @MessagePattern('game.reward.process')
-  async handleRewardProcess(@Payload() data: {
-    userId: string;
-    eventId: string;
-    rewardId: string;
-    type: string;
-    name: string;
-    qty: number;
-    processing: { cmd: string; payload: any };
-    callback: { cmd: string; payload: any };
-  }) {
+  async handleRewardProcess(
+    @Payload()
+    data: {
+      userId: string;
+      eventId: string;
+      rewardId: string;
+      type: string;
+      name: string;
+      qty: number;
+      processing: { cmd: string; payload: any };
+      callback: { cmd: string; payload: any };
+    },
+  ) {
     return this.gameService.processRewardRequest(data);
   }
 
   @MessagePattern('game.user-action.get')
-  async getUserAction(@Payload() data: {
-    userId: string;
-    field: string;
-  }) {
+  async getUserAction(@Payload() data: { userId: string; field: string }) {
     return this.gameService.getUserAction(data);
   }
 }

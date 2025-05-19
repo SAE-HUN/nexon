@@ -16,4 +16,4 @@ export class ResultRewardRequestDto {
   @IsString()
   @IsOptional()
   reason?: string;
-} 
+}

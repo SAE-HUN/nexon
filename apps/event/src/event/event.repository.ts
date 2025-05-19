@@ -16,7 +16,13 @@ export class EventRepository {
     return createdEvent.save();
   }
 
-  async find(query: any, sortBy: string, sortOrder: 1 | -1, skip: number, limit: number): Promise<Event[]> {
+  async find(
+    query: any,
+    sortBy: string,
+    sortOrder: 1 | -1,
+    skip: number,
+    limit: number,
+  ): Promise<Event[]> {
     return this.eventModel
       .find(query)
       .sort({ [sortBy]: sortOrder } as any)
@@ -36,4 +42,4 @@ export class EventRepository {
   async exists(filter: any): Promise<boolean> {
     return !!(await this.eventModel.exists(filter));
   }
-} 
+}

@@ -26,4 +26,4 @@ export class ListEventRewardQuery {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: string = 'desc';
-} 
+}

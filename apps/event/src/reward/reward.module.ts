@@ -7,12 +7,10 @@ import { Reward, RewardSchema } from './schema/reward.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Reward.name, schema: RewardSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Reward.name, schema: RewardSchema }]),
   ],
   controllers: [RewardController],
   providers: [RewardService, RewardRepository],
   exports: [RewardService, RewardRepository],
 })
-export class RewardModule {} 
+export class RewardModule {}

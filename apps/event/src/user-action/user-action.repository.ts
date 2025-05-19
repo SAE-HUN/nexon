@@ -19,4 +19,4 @@ export class UserActionRepository {
   async findAll() {
     return this.userActionModel.find().exec();
   }
-} 
+}

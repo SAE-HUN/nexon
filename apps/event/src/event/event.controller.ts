@@ -6,13 +6,11 @@ import { ListEventQuery } from './dto/list-event.dto';
 
 @Controller()
 export class EventController {
-  constructor(
-    private readonly eventService: EventService,
-  ) {}
+  constructor(private readonly eventService: EventService) {}
 
   @MessagePattern({ cmd: 'event.hello' })
   async getHello() {
-    return "Hello, World!";
+    return 'Hello, World!';
   }
 
   @MessagePattern({ cmd: 'event.event.create' })
@@ -31,7 +29,12 @@ export class EventController {
   }
 
   @MessagePattern({ cmd: 'event.event.check-condition' })
-  async checkUserEventCondition(@Payload() payload: { eventId: string; userId: string }) {
-    return await this.eventService.checkUserEventCondition(payload.eventId, payload.userId);
+  async checkUserEventCondition(
+    @Payload() payload: { eventId: string; userId: string },
+  ) {
+    return await this.eventService.checkUserEventCondition(
+      payload.eventId,
+      payload.userId,
+    );
   }
 }

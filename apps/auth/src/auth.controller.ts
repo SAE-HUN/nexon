@@ -11,7 +11,7 @@ export class AuthController {
 
   @MessagePattern({ cmd: 'auth.hello' })
   async getHello() {
-    return "Hello, World!";
+    return 'Hello, World!';
   }
 
   @MessagePattern({ cmd: 'auth.user.signup' })

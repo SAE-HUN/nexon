@@ -27,24 +27,31 @@ export class AuthService {
     const user = new this.userModel({
       email,
       password: hashedPassword,
-    role: UserRole.USER,
+      role: UserRole.USER,
     });
     await user.save();
     return { id: user.id, email: user.email, role: user.role };
   }
-  
+
   async login(dto: LoginDto): Promise<{ access_token: string }> {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new RpcException({ message: 'Invalid email or password.', status: 401 });
+      throw new RpcException({
+        message: 'Invalid email or password.',
+        status: 401,
+      });
     }
-    const payload: { sub: string; email: string; role: string } = { sub: user.id, email: user.email, role: user.role };
+    const payload: { sub: string; email: string; role: string } = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
-  
+
   async changeUserRole(dto: ChangeUserRoleDto) {
     const { userId, role } = dto;
     const user = await this.userModel.findById(userId);

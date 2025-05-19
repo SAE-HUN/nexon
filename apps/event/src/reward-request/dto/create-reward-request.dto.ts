@@ -6,4 +6,4 @@ export class CreateRewardRequestDto {
 
   @IsString()
   eventRewardId: string;
-} 
+}
