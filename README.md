@@ -100,6 +100,11 @@ erDiagram
         enum status
         string reason
     }
+    UserAction {
+        string _id PK
+        string cmd
+        string field
+    }
 ```
 
 ### 인덱싱
@@ -109,6 +114,20 @@ erDiagram
   - 조회 성능을 위해 userId 인덱싱(ref가 아니므로 별도 인덱싱 필요)
 - EventReward
   - 중복 이벤트 보상 생성 방지를 위해 Event + Reward을 복합 인덱싱으로 Unique 처리
+
+### 고려사항
+
+- Reward
+  - 실제 보상 지급은 타 서비스에서 이루어지며, MSA의 경우 타 부서일 확률이 높다고 생각하였습니다.
+  - 그래서 지급 요청을 보낼 cmd, 지급 요청 시 보내야하는 값 등을 공동으로 관리할 수 있는 테이블이 있다면 소통 비용을 확연히 줄일 수 있다고 판단하였습니다.
+  - 이를 위해 Reward 테이블을 분리하고 Event에 나갈 보상을 EventReward로 Reference하여 설계하였습니다.
+  - Event 테이블에 Embedding방식으로 연결할 수는 있으나, 이벤트 보상 목록 조회나 탐색에 부적합하여 채택하지 않았습니다.
+- UserAction
+  - UserAction은 유저 행동 지표를 Game서비스에 조회할 때 사용할 cmd와 field 속성을 가지고 있습니다.
+  - Event의 Condition구성에 사용할 수 있는 항의 목록을 저장합니다.
+  - Reward와 동일한 이유로 테이블로 만들었으며, 자유도가 필요한 자료 구조의 칼럼에 사용되어 Reference 방식으로 사용하지는 않았습니다.
+  - Event 생성 시, 클라이언트에서 UserAction 목록을 조회하여 Event의 Condition에 cmd, field 값을 직접 넣어 구성하는 시나리오를 예상했습니다.
+  - 데이터 정합성 이슈가 생길 수 있으나, 가능성이 낮을 것으로 예상되며 수동 대응이 크게 어렵지는 않아보여 구현상의 이점을 취하는 것으로 결정하였습니다.
 
 ## 주요 구현 포인트
 
@@ -226,16 +245,55 @@ await firstValueFrom(this.gameClient.send(reward.cmd, {
 - findOneAndUpdate로 조회와 업데이트를 원자적으로 수행하여 위 문제를 방지하였습니다.
 - 뒤에 오는 exists 체크를 한 세션(트랜잭션)에서 수행하지 않은 이유는, 일관성 보장의 목적이 아니기 때문입니다.
   - UX를 위해 추가한 로직으로 트랜잭션 사용이 과할 수 있다 판단하였습니다.
-  - 다른 로직 모두 같은 기조로 작성하였습니다.
+  - 유사한 성격의 다른 로직 모두 같은 기조로 작성하였습니다.
 - 추가로, game 서비스에 보내는 지급 요청 또한 APPROVE와 트랜잭션으로 묶지 않았습니다.
   - 만약 APPROVE 이후 에러가 발생한다면 수동으로 정확한 원인 판단이 필요하다고 생각했습니다.
   - 왜냐하면, 서비스가 분리되어있기 때문에 실제로는 지급이 완료되고 PENDING 상태로 롤백될 수 있기 때문입니다.
 
 ### HTTP<->TCP 이종간의 연동
 
-**Gateway**
+- Client와 직접적으로 HTTP 통신을 하는 Gateway는 RESTful 방식을 최대한 유지하고자 하였습니다.
+- 그래서 필요 시, gateway에서 받는 query, header의 데이터를 payload에 담아 내부 서비스로 보냅니다.
 
--
+```typescript
+async listMyRewardRequests(
+    @Query() query: ListRewardRequestQuery,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const user = req.user;
+    return this.gatewayService.proxyToEvent('event.reward-request.list', {
+      ...query,
+      userId: user.userId,
+    });
+  }
+```
+
+- 또한, 적절한 HTTP Status로 응답을 주기 위헤 내부 서비스에서 Status 코드를 포함한 Exception을 발생시키고, Gateway에서는 해당 Status로 응답을 반환합니다.
+
+```typescript
+throw new RpcException({
+  message: 'Duplicate reward request',
+  status: 400,
+});
+```
+
+```typescript
+export class CommonExceptionFilter implements ExceptionFilter {
+  const status =
+    exception instanceof HttpException
+      ? exception.getStatus()
+      : (exception as any).status
+
+  ...
+
+  response.status(status).json({
+    statusCode: status,
+    timestamp: log.timestamp,
+    path: request.url,
+    error: message,
+  });
+}
+```
 
 ## 실행 & 테스트
 
@@ -251,5 +309,3 @@ docker-compose up
 npm run test:e2e:auth
 npm run test:e2e:event
 ```
-
-## 회고
