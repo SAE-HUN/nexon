@@ -26,8 +26,7 @@ flowchart LR
 
 1. Gateway API
 - 목적: HTTP 엔드포인트가 있는 API 진입점
-- 기능: 적절한 마이크로서비스로 라우팅, JWT 인증
-- 보안: 역할 기반 가드, JWT 검증
+- 기능: 적절한 마이크로서비스로 라우팅, JWT 인증, 역할 기반 가드
 
 2. Auth 서비스
 - 기능: 회원가입, 로그인, 사용자 역할 변경
@@ -47,7 +46,7 @@ flowchart LR
 ### 코드 구조
 
 NestJS에서 권장하는 구조를 따릅니다:
-- Controller: 들어오는 요청 처리
+- Controller: 들어오는 요청 라우팅
 - Service: 비즈니스 로직 담당
 - Repository: 데이터 접근 관리
 - DTO: 데이터 구조 정의 및 검증
