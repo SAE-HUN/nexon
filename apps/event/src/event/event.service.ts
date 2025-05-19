@@ -115,6 +115,10 @@ export class EventService {
   async checkUserEventCondition(eventId: string, userId: string): Promise<{ success: boolean; detail: any }> {
     const event = await this.eventRepository.findById(eventId);
     if (!event) throw new RpcException({ message: 'Event not found', status: 404 });
+    const now = new Date(Date.now());
+    if (!event.isActive || now < event.startedAt || now > event.endedAt) {
+      return { success: false, detail: { reason: 'Event is not active or not in progress' } };
+    }
     const result = await this.evalCondition(event.condition, userId);
     return result;
   }

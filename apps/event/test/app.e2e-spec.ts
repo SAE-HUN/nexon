@@ -22,6 +22,7 @@ describe('Event Microservice (e2e)', () => {
   let eventRewardModel: any;
   let rewardRequestModel: any;
   let replSet: MongoMemoryReplSet;
+  let realDateNow: () => number;
 
   beforeAll(async () => {
     replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
@@ -60,6 +61,9 @@ describe('Event Microservice (e2e)', () => {
     rewardModel = app.get(getModelToken(Reward.name));
     eventRewardModel = app.get(getModelToken(EventReward.name));
     rewardRequestModel = app.get(getModelToken(RewardRequest.name));
+
+    realDateNow = Date.now;
+    jest.spyOn(global.Date, 'now').mockImplementation(() => new Date('2024-01-01T12:00:00.000Z').getTime());
   });
 
   beforeEach(async () => {
@@ -79,6 +83,7 @@ describe('Event Microservice (e2e)', () => {
     if (replSet) {
       await replSet.stop();
     }
+    Date.now = realDateNow;
   });
 
   async function createTestEventAndReward() {
@@ -406,6 +411,58 @@ describe('Event Microservice (e2e)', () => {
       const eventId = eventRes._id;
       const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
       expect(checkRes.success).toBe(true);
+    });
+
+    it('should fail if event is not active', async () => {
+      const createEventDto = {
+        title: 'Inactive Event',
+        description: 'inactive',
+        startedAt: '2024-01-01T00:00:00.000Z',
+        endedAt: '2099-01-02T00:00:00.000Z',
+        isActive: false,
+        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(false);
+      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
+    });
+
+    it('should fail if event is not in progress (before start)', async () => {
+      const future = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString();
+      const createEventDto = {
+        title: 'Future Event',
+        description: 'future',
+        startedAt: future,
+        endedAt: '2099-01-02T00:00:00.000Z',
+        isActive: true,
+        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(false);
+      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
+    });
+
+    it('should fail if event is not in progress (after end)', async () => {
+      // Date.now() is fixed to 2024-01-01T12:00:00.000Z, so endedAt should be before that
+      const past = '2023-12-30T00:00:00.000Z';
+      const yesterday = '2023-12-31T00:00:00.000Z';
+      const createEventDto = {
+        title: 'Past Event',
+        description: 'past',
+        startedAt: past,
+        endedAt: yesterday,
+        isActive: true,
+        condition: { op: '>=', cmd: 'get_login_days', field: 'loginDays', value: 7 }
+      };
+      const eventRes: any = await firstValueFrom(client.send({ cmd: 'event.event.create' }, createEventDto));
+      const eventId = eventRes._id;
+      const checkRes: any = await firstValueFrom(client.send({ cmd: 'event.event.check-condition' }, { eventId, userId: 'u1' }));
+      expect(checkRes.success).toBe(false);
+      expect(checkRes.detail.reason).toBe('Event is not active or not in progress');
     });
   });
 
