@@ -19,22 +19,28 @@ import { LoggerMiddleware } from './logger.middleware';
         signOptions: { expiresIn: '1h' },
       }),
     }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.AUTH_HOST ?? '127.0.0.1',
-          port: parseInt(process.env.AUTH_PORT ?? '4001', 10),
-        },
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('AUTH_HOST', '127.0.0.1'),
+            port: parseInt(configService.get<string>('AUTH_PORT', '4001'), 10),
+          },
+        }),
+        inject: [ConfigService],
       },
       {
         name: 'EVENT_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.EVENT_HOST ?? '127.0.0.1',
-          port: parseInt(process.env.EVENT_PORT ?? '4002', 10),
-        },
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('EVENT_HOST', '127.0.0.1'),
+            port: parseInt(configService.get<string>('EVENT_PORT', '4002'), 10),
+          },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],
