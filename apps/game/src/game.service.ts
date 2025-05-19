@@ -54,4 +54,11 @@ export class GameService {
       message: 'Reward processing started',
     };
   }
+
+  async getUserAction(data: {
+    userId: string;
+    field: string;
+  }) {
+    return 7;
+  }
 }

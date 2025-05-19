@@ -24,4 +24,12 @@ export class GameController {
   }) {
     return this.gameService.processRewardRequest(data);
   }
+
+  @MessagePattern('game.user-action.get')
+  async getUserAction(@Payload() data: {
+    userId: string;
+    field: string;
+  }) {
+    return this.gameService.getUserAction(data);
+  }
 }
