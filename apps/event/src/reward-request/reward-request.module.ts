@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RewardRequestController } from './reward-request.controller';
 import { RewardRequestService } from './reward-request.service';
@@ -8,7 +8,7 @@ import { EventRewardModule } from '../event-reward/event-reward.module';
 import { EventRewardSchema } from '../event-reward/schema/event-reward.schema';
 import { EventReward } from '../event-reward/schema/event-reward.schema';
 import { EventRewardRepository } from '../event-reward/event-reward.repository';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { SharedModule } from '../shared/shared.module';
 import { EventService } from '../event/event.service';
 import { EventModule } from '../event/event.module';
 
@@ -20,16 +20,7 @@ import { EventModule } from '../event/event.module';
     ]),
     EventRewardModule,
     EventModule,
-    ClientsModule.register([
-      {
-        name: 'GAME_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: process.env.GAME_HOST || '127.0.0.1',
-          port: parseInt(process.env.GAME_PORT || '4003', 10),
-        },
-      },
-    ]),
+    SharedModule,
   ],
   controllers: [RewardRequestController],
   providers: [RewardRequestService, RewardRequestRepository, EventRewardRepository, EventService],
