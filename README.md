@@ -303,9 +303,20 @@ export class CommonExceptionFilter implements ExceptionFilter {
 docker-compose up
 ```
 
+- API Docs: http://localhost:3000/api-docs
+- ADMIN Email: admin@example.com
+- ADMIN Password: admin1234
+
 **E2E 테스트**
 
 ```bash
+npm run test:e2e # gateway
 npm run test:e2e:auth
 npm run test:e2e:event
+```
+
+**단위 테스트**
+
+```bash
+npm run test
 ```
