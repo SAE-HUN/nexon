@@ -103,9 +103,9 @@ describe('RewardService', () => {
         cmd: 'cmd',
       };
       rewardRepository.exists.mockResolvedValue(true);
-      await expect(service.createReward(dto)).rejects.toThrow(
-        'Duplicate reward',
-      );
+      await expect(service.createReward(dto)).rejects.toMatchObject({
+        message: 'Duplicate reward',
+      });
     });
   });
 });
