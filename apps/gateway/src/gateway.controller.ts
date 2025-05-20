@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { CreateRewardDto } from 'apps/event/src/reward/dto/create-reward.dto';
-import { CreateUserActionDto } from 'apps/event/src/user-action/dto/create-user-action.dto';
 import { Request as ExpressRequest } from 'express';
 import { ChangeUserRoleDto } from '../../auth/src/dto/change-user-role.dto';
 import { CreateUserDto } from '../../auth/src/dto/create-user.dto';
@@ -24,7 +22,9 @@ import { ListEventQuery } from '../../event/src/event/dto/list-event.dto';
 import { CreateRewardRequestDto } from '../../event/src/reward-request/dto/create-reward-request.dto';
 import { ListRewardRequestQuery } from '../../event/src/reward-request/dto/list-reward-request.dto';
 import { RejectRewardRequestDto } from '../../event/src/reward-request/dto/reject-reward-request.dto';
+import { CreateRewardDto } from '../../event/src/reward/dto/create-reward.dto';
 import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.dto';
+import { CreateUserActionDto } from '../../event/src/user-action/dto/create-user-action.dto';
 import { GatewayService } from './gateway.service';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
@@ -112,7 +112,7 @@ export class GatewayController {
   }
 
   @Post('user-action')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
   async createUserAction(@Body() createUserActionDto: CreateUserActionDto) {
     return this.gatewayService.proxyToEvent(
@@ -122,7 +122,7 @@ export class GatewayController {
   }
 
   @Get('user-action')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN', 'OPERATOR')
   async listUserActions() {
     return this.gatewayService.proxyToEvent('event.user-action.list');
@@ -178,7 +178,7 @@ export class GatewayController {
   }
 
   @Get('reward-request/my')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   async listMyRewardRequests(
     @Query() query: ListRewardRequestQuery,
     @Req() req: AuthenticatedRequest,
