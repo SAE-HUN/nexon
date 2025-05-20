@@ -8,7 +8,6 @@ import {
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
-import { of } from 'rxjs';
 import { RpcExceptionFilter } from '../../common/rpc-exception.filter';
 import { EventReward } from '../src/event-reward/schema/event-reward.schema';
 import { EventModule } from '../src/event.module';
@@ -25,7 +24,6 @@ export interface TestContext {
     RewardRequest: any;
   };
   stop: () => Promise<void>;
-  realDateNow: () => number;
 }
 
 export async function createTestContext(
@@ -56,9 +54,6 @@ export async function createTestContext(
   app.useGlobalFilters(new RpcExceptionFilter());
   await app.listen();
 
-  const gameClient = app.get<ClientProxy>('GAME_SERVICE');
-  jest.spyOn(gameClient, 'send').mockImplementation(() => of(7));
-
   const client = ClientProxyFactory.create({
     transport: Transport.TCP,
     options: { host: '127.0.0.1', port },
@@ -76,11 +71,6 @@ export async function createTestContext(
     RewardRequest: rewardRequestModel,
   };
 
-  const realDateNow = Date.now;
-  jest
-    .spyOn(global.Date, 'now')
-    .mockImplementation(() => new Date('2024-01-01T12:00:00.000Z').getTime());
-
   return {
     app,
     client,
@@ -90,6 +80,5 @@ export async function createTestContext(
       await app.close();
       await replSet.stop();
     },
-    realDateNow,
   };
 }

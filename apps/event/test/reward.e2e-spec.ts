@@ -19,7 +19,6 @@ describe('Reward', () => {
 
   afterAll(async () => {
     await ctx.stop();
-    Date.now = ctx.realDateNow;
   });
 
   it('should list with pagination and filter', async () => {

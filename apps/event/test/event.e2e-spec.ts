@@ -1,16 +1,23 @@
 jest.setTimeout(30000);
 
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { createTestContext, TestContext } from './bootstrap';
 
 describe('Event', () => {
   let ctx: TestContext;
   let client: ClientProxy;
+  let realDateNow: () => number;
 
   beforeAll(async () => {
     ctx = await createTestContext();
     client = ctx.client;
+    const gameClient = ctx.app.get<ClientProxy>('GAME_SERVICE');
+    jest.spyOn(gameClient, 'send').mockImplementation(() => of(7));
+    realDateNow = Date.now;
+    jest
+      .spyOn(global.Date, 'now')
+      .mockImplementation(() => new Date('2024-01-01T12:00:00.000Z').getTime());
   });
 
   beforeEach(async () => {
@@ -19,7 +26,7 @@ describe('Event', () => {
 
   afterAll(async () => {
     await ctx.stop();
-    Date.now = ctx.realDateNow;
+    Date.now = realDateNow;
   });
 
   describe('Create', () => {

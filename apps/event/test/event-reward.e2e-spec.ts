@@ -21,7 +21,6 @@ describe('EventReward', () => {
 
   afterAll(async () => {
     await ctx.stop();
-    Date.now = ctx.realDateNow;
   });
 
   it('should link reward to event', async () => {
