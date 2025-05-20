@@ -3,10 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
+import { LoggerMiddleware } from './common/logger.middleware';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
-import { JwtStrategy } from './jwt.strategy';
-import { LoggerMiddleware } from './logger.middleware';
+import { JwtStrategy } from './strategy/jwt.strategy';
 
 @Module({
   imports: [

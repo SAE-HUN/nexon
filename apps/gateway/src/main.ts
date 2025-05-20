@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { CommonExceptionFilter } from './common-exception.filter';
+import { CommonExceptionFilter } from './common/common-exception.filter';
 import { GatewayModule } from './gateway.module';
 
 async function bootstrap() {

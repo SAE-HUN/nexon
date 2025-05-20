@@ -26,8 +26,8 @@ import { CreateRewardDto } from '../../event/src/reward/dto/create-reward.dto';
 import { ListRewardQuery } from '../../event/src/reward/dto/list-reward.dto';
 import { CreateUserActionDto } from '../../event/src/user-action/dto/create-user-action.dto';
 import { GatewayService } from './gateway.service';
-import { Roles } from './roles.decorator';
-import { RolesGuard } from './roles.guard';
+import { Roles } from './roles/roles.decorator';
+import { RolesGuard } from './roles/roles.guard';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
