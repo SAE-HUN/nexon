@@ -38,6 +38,8 @@ services:
       - AUTH_PORT=4001
       - JWT_SECRET=secret111
       - AUTH_MONGODB_URI=mongodb://root:example@mongodb:27017/auth?authSource=admin
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=admin1234
     ports:
       - '4001:4001'
     depends_on:
