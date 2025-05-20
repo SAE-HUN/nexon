@@ -390,7 +390,7 @@ describe('EventService', () => {
           .mockReturnValue(throwError(() => new Error('fail')));
         await expect(
           service.checkUserEventCondition('e1', 'u1'),
-        ).rejects.toThrow('Game server error');
+        ).rejects.toMatchObject({ message: 'Game server error' });
       });
     });
   });

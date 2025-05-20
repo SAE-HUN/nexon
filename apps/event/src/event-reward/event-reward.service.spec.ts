@@ -72,18 +72,18 @@ describe('EventRewardService', () => {
     it('should throw if event reward already exists', async () => {
       const dto = { eventId: 'event1', rewardId: 'reward1', qty: 5 };
       eventRewardRepository.exists.mockResolvedValue(true);
-      await expect(service.createEventReward(dto)).rejects.toThrow(
-        'This reward is already linked to the event.',
-      );
+      await expect(service.createEventReward(dto)).rejects.toMatchObject({
+        message: 'This reward is already linked to the event.',
+      });
     });
 
     it('should throw if event does not exist', async () => {
       const dto = { eventId: 'event1', rewardId: 'reward1', qty: 5 };
       eventRewardRepository.exists.mockResolvedValue(false);
       eventRepository.exists.mockResolvedValue(false);
-      await expect(service.createEventReward(dto)).rejects.toThrow(
-        'Event does not exist.',
-      );
+      await expect(service.createEventReward(dto)).rejects.toMatchObject({
+        message: 'Event does not exist.',
+      });
     });
 
     it('should throw if reward does not exist', async () => {
@@ -91,9 +91,9 @@ describe('EventRewardService', () => {
       eventRewardRepository.exists.mockResolvedValue(false);
       eventRepository.exists.mockResolvedValue(true);
       rewardRepository.exists.mockResolvedValue(false);
-      await expect(service.createEventReward(dto)).rejects.toThrow(
-        'Reward does not exist.',
-      );
+      await expect(service.createEventReward(dto)).rejects.toMatchObject({
+        message: 'Reward does not exist.',
+      });
     });
   });
 

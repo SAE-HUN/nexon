@@ -99,9 +99,9 @@ describe('RewardRequestService', () => {
     it('should throw if event reward does not exist', async () => {
       const dto = { eventRewardId: 'notfound', userId: 'user1' };
       eventRewardRepository.findById.mockResolvedValue(null);
-      await expect(service.createRewardRequest(dto)).rejects.toThrow(
-        'EventReward not found',
-      );
+      await expect(service.createRewardRequest(dto)).rejects.toMatchObject({
+        message: 'EventReward not found',
+      });
     });
 
     it('should throw if duplicate request', async () => {
@@ -110,9 +110,9 @@ describe('RewardRequestService', () => {
         event: { toString: () => 'event1' },
       });
       rewardRequestRepository.exists.mockResolvedValue(true);
-      await expect(service.createRewardRequest(dto)).rejects.toThrow(
-        'Duplicate reward request',
-      );
+      await expect(service.createRewardRequest(dto)).rejects.toMatchObject({
+        message: 'Duplicate reward request',
+      });
     });
 
     it('should throw if event condition is not met', async () => {
@@ -125,9 +125,9 @@ describe('RewardRequestService', () => {
         success: false,
         detail: 'not met',
       });
-      await expect(service.createRewardRequest(dto)).rejects.toThrow(
-        'Event condition not met',
-      );
+      await expect(service.createRewardRequest(dto)).rejects.toMatchObject({
+        message: 'Event condition not met',
+      });
     });
   });
 
@@ -230,9 +230,9 @@ describe('RewardRequestService', () => {
         null,
       );
       rewardRequestRepository.exists.mockResolvedValue(false);
-      await expect(service.approveRewardRequest('notfound')).rejects.toThrow(
-        'RewardRequest not found',
-      );
+      await expect(
+        service.approveRewardRequest('notfound'),
+      ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should throw if not in PENDING status', async () => {
@@ -240,9 +240,11 @@ describe('RewardRequestService', () => {
         null,
       );
       rewardRequestRepository.exists.mockResolvedValue(true);
-      await expect(service.approveRewardRequest('notpending')).rejects.toThrow(
-        'Only PENDING requests can be approved',
-      );
+      await expect(
+        service.approveRewardRequest('notpending'),
+      ).rejects.toMatchObject({
+        message: 'Only PENDING requests can be approved',
+      });
     });
   });
 
@@ -268,7 +270,7 @@ describe('RewardRequestService', () => {
           rewardRequestId: 'notfound',
           reason: 'reason',
         }),
-      ).rejects.toThrow('RewardRequest not found');
+      ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should throw if not in PENDING status', async () => {
@@ -279,7 +281,9 @@ describe('RewardRequestService', () => {
           rewardRequestId: 'notpending',
           reason: 'reason',
         }),
-      ).rejects.toThrow('Only PENDING requests can be rejected');
+      ).rejects.toMatchObject({
+        message: 'Only PENDING requests can be rejected',
+      });
     });
   });
 
@@ -299,17 +303,19 @@ describe('RewardRequestService', () => {
     it('should throw if reward request does not exist', async () => {
       rewardRequestRepository.findOneAndUpdate.mockResolvedValue(null);
       rewardRequestRepository.exists.mockResolvedValue(false);
-      await expect(service.processRewardRequest('notfound')).rejects.toThrow(
-        'RewardRequest not found',
-      );
+      await expect(
+        service.processRewardRequest('notfound'),
+      ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should throw if not in APPROVED status', async () => {
       rewardRequestRepository.findOneAndUpdate.mockResolvedValue(null);
       rewardRequestRepository.exists.mockResolvedValue(true);
-      await expect(service.processRewardRequest('notapproved')).rejects.toThrow(
-        'Only APPROVED requests can be processed',
-      );
+      await expect(
+        service.processRewardRequest('notapproved'),
+      ).rejects.toMatchObject({
+        message: 'Only APPROVED requests can be processed',
+      });
     });
   });
 
@@ -355,7 +361,7 @@ describe('RewardRequestService', () => {
           rewardRequestId: 'notfound',
           status: RewardResultStatus.SUCCESS,
         }),
-      ).rejects.toThrow('RewardRequest not found');
+      ).rejects.toMatchObject({ message: 'RewardRequest not found' });
     });
 
     it('should throw if not in PROCESSING/APPROVED status', async () => {
@@ -366,7 +372,9 @@ describe('RewardRequestService', () => {
           rewardRequestId: 'notprocessing',
           status: RewardResultStatus.SUCCESS,
         }),
-      ).rejects.toThrow('Only PROCESSING requests can be updated');
+      ).rejects.toMatchObject({
+        message: 'Only PROCESSING requests can be updated',
+      });
     });
 
     it('should throw if status is invalid', async () => {
@@ -375,7 +383,7 @@ describe('RewardRequestService', () => {
           rewardRequestId: 'rr1',
           status: 'INVALID' as any,
         }),
-      ).rejects.toThrow('Invalid status');
+      ).rejects.toMatchObject({ message: 'Invalid status' });
     });
   });
 });
